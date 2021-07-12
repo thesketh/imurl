@@ -79,7 +79,7 @@ class URL:
         self.password = password
         self.host = host
         self.port = port
-        self.path = path
+        self.path: str = path or "/"
         self._parameters = param_dict
         self.param_delimiter = param_delimiter
         self._query = query_dict
@@ -108,13 +108,17 @@ class URL:
                 key, value = item.split("=")
                 parameters[key] = value
 
+        path, host = parsed_url.path or None, parsed_url.hostname
+        if path and not host:
+            path, host = host, path
+
         return cls(
             scheme=parsed_url.scheme,
             username=parsed_url.username,
             password=parsed_url.password,
-            host=parsed_url.hostname,
+            host=host,
             port=parsed_url.port,
-            path=parsed_url.path or None,
+            path=path,
             parameters=parameters,
             param_delimiter=param_delimiter,
             query=query,
@@ -156,14 +160,20 @@ class URL:
         """The URL's network location."""
         if not self.host:
             return None
+
         components = []
+
         if self.username:
             components.append(self.username)
+
             if self.password:
                 components.append(f":{self.password}")
+
             components.append("@")
+
         components.append(self.host)
-        if self.port:
+
+        if isinstance(self.port, int):
             components.append(f":{self.port!s}")
 
         return "".join(components)
@@ -177,14 +187,14 @@ class URL:
 
         if netloc:
             components.append(netloc)
-        if self.path:
-            components.append(self.path)
+
+        components.append(self.path)
         if params:
             components.append(params)
         if query:
             components.append(query)
         if self.fragment:
-            components.append(self.fragment)
+            components.append(f"#{self.fragment}")
         return "".join(components)
 
     def __str__(self) -> str:
