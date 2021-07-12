@@ -1,0 +1,6 @@
+pytest
+black
+pylint
+mypy
+setuptools
+pdoc
