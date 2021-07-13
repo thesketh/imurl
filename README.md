@@ -7,6 +7,8 @@
 `imurl` is inspired by both [`purl`](https://github.com/codeinthehole/purl) and Python's [`pathlib`](https://docs.python.org/3/library/pathlib.html).
 It aims to maximise simplicity and ease of use, with support for a wide range of URL schemes.
 
+## Examples
+
 URLs can be created from URL strings, and have the attributes you'd expect:
 
 ```python
@@ -40,4 +42,13 @@ imurl.URL('https://google.com/search')
 imurl.URL('https://google.com/search?q=a+search+term')
 >>> u2.delete_query("q")
 imurl.URL('https://google.com/search')
+```
+
+## Installation
+
+`imurl` can be installed with `pip`, and has been tested on Python 3.7. `imurl` is still
+alpha software, and can be considered unstable:
+
+```
+pip install imurl
 ```
