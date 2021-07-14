@@ -15,7 +15,7 @@ dev_dependencies = [
 
 setuptools.setup(
     name="imurl",
-    version="0.0.3",
+    version="0.0.4",
     author="Travis Hesketh",
     author_email="travis@hesketh.scot",
     description="`imurl` is an immutable URL library, written in modern Python.",
@@ -28,7 +28,7 @@ setuptools.setup(
     },
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Topic :: Software Development :: Libraries",
@@ -36,6 +36,6 @@ setuptools.setup(
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     extras_require={"dev": dev_dependencies}
 )

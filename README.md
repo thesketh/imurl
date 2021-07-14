@@ -50,7 +50,7 @@ imurl.URL('https://google.com/search')
 
 ## Installation
 
-`imurl` can be installed with `pip`, and has been tested on Python 3.7. `imurl` is still
+`imurl` can be installed with `pip`, and has been tested on Python 3.8. `imurl` is still
 alpha software, and should be considered unstable:
 
 ```
