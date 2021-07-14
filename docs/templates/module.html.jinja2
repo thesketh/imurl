@@ -1,0 +1,12 @@
+{% extends "default/module.html.jinja2" %}
+
+{% block module_list_link %}
+    {% set parentmodule = ".".join(module.modulename.split(".")[:-1]) %}
+    {% if parentmodule and parentmodule in all_modules %}
+        <a class="pdoc-button module-list-button" href="../{{ parentmodule.split(".")[-1] }}.html">
+            {% include "box-arrow-in-left.svg" %}
+            &nbsp;
+            {{- parentmodule -}}
+        </a>
+    {% endif %}
+{% endblock %}

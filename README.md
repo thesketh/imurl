@@ -4,10 +4,13 @@
 
 `imurl` is an immutable URL library, written in modern Python.
 
-`imurl` is inspired by both [`purl`](https://github.com/codeinthehole/purl) and Python's [`pathlib`](https://docs.python.org/3/library/pathlib.html).
-It aims to maximise simplicity and ease of use, with support for a wide range of URL schemes.
+`imurl` is inspired by both [`purl`](https://github.com/codeinthehole/purl) and Python's [`pathlib`](https://docs.python.org/3/library/pathlib.html)
+and [`datetime`](https://docs.python.org/3/library/datetime.html) modules. It aims to provide a simple, immutable data structure to represent 
+URL structures, with support for a wide range of URL/URI schemes.
 
 ## Examples
+
+Here are some quick examples for `imurl`. There are more in the documentation: `imurl.URL`.
 
 URLs can be created from URL strings, and have the attributes you'd expect:
 
@@ -47,7 +50,7 @@ imurl.URL('https://google.com/search')
 ## Installation
 
 `imurl` can be installed with `pip`, and has been tested on Python 3.7. `imurl` is still
-alpha software, and can be considered unstable:
+alpha software, and should be considered unstable:
 
 ```
 pip install imurl
