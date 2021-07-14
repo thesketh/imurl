@@ -186,6 +186,7 @@
                         <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;The URL class.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">urllib.parse</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">PurePosixPath</span>
@@ -245,11 +246,11 @@
 <span class="k">class</span> <span class="nc">URL</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A simple, immutable URL class.</span>
-<span class="sd">    </span>
+
 <span class="sd">    **URLs and their components**</span>
 
 <span class="sd">    URLs, as represented by this class, take the following general form (as</span>
-<span class="sd">    outlined by [RFC1738](https://datatracker.ietf.org/doc/html/rfc1738) and </span>
+<span class="sd">    outlined by [RFC1738](https://datatracker.ietf.org/doc/html/rfc1738) and</span>
 <span class="sd">    [RFC3986](https://datatracker.ietf.org/doc/html/rfc3986)):</span>
 
 <span class="sd">    ```plaintext</span>
@@ -264,7 +265,7 @@
 
 <span class="sd">    The constructor can take a URL string, URL components as key word arguments,</span>
 <span class="sd">    or a mixture of both (keyword arguments will override the URL string):</span>
-<span class="sd">    </span>
+
 <span class="sd">    ```python</span>
 <span class="sd">    &gt;&gt;&gt; URL(&#39;http://example.com&#39;)</span>
 <span class="sd">    imurl.URL(&#39;http://example.com&#39;)</span>
@@ -277,7 +278,7 @@
 <span class="sd">    As `URL` objects are immutable, a handy `URL.replace` method (which takes</span>
 <span class="sd">    the same arguments as the constructor) will create a new `URL` by replacing</span>
 <span class="sd">    parts from the original `URL` (similarly to how [`datetime`](</span>
-<span class="sd">        https://docs.python.org/3/library/datetime.html#datetime.date.replace) </span>
+<span class="sd">        https://docs.python.org/3/library/datetime.html#datetime.date.replace)</span>
 <span class="sd">    work in the stdlib):</span>
 
 <span class="sd">    ```python</span>
@@ -294,11 +295,11 @@
 
 <span class="sd">    **URL encoding**</span>
 
-<span class="sd">    Many special characters are supposed to be &#39;% encoded&#39; in URLs. With the </span>
+<span class="sd">    Many special characters are supposed to be &#39;% encoded&#39; in URLs. With the</span>
 <span class="sd">    `quote_components` flag set, keyword args to the constructor and to</span>
 <span class="sd">    `replace` are percent encoded using [`urllib.parse.quote`](</span>
 <span class="sd">        https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote).</span>
-<span class="sd">    This is set to `True` by default for the constructor, and `False` for </span>
+<span class="sd">    This is set to `True` by default for the constructor, and `False` for</span>
 <span class="sd">    arguments to `replace`.</span>
 
 <span class="sd">    ```python</span>
@@ -310,7 +311,7 @@
 <span class="sd">    ```</span>
 
 <span class="sd">    **Working with query/path parameters**</span>
-<span class="sd">    </span>
+
 <span class="sd">    Path parameters and query parameters are parts of the URL which can</span>
 <span class="sd">    be used to represent key-value data.</span>
 
@@ -324,7 +325,7 @@
 <span class="sd">    used in modern URL schemes, but have some historical significance. They&#39;re</span>
 <span class="sd">    typically delimited using a semicolon, but some examples use a comma.</span>
 <span class="sd">    This delimiter can be configured by changing `URL.param_delimiter`:</span>
-<span class="sd">    </span>
+
 <span class="sd">    ```plaintext</span>
 <span class="sd">    scheme://some-host.com/path/to/somewhere;these=are;path=params</span>
 <span class="sd">    ```</span>
@@ -340,7 +341,7 @@
 <span class="sd">    ```</span>
 
 <span class="sd">    Since these typically represent key-value data, `imurl` considers them to be</span>
-<span class="sd">    string-string mappings instead of strings, and they are set/accessed as such. </span>
+<span class="sd">    string-string mappings instead of strings, and they are set/accessed as such.</span>
 <span class="sd">    In the constructor/`replace`, these are passed as `param_dict` and `query_dict`.</span>
 
 <span class="sd">    ```python</span>
@@ -365,7 +366,7 @@
 <span class="sd">    imurl.URL(&#39;https://example.com/?key&#39;)</span>
 <span class="sd">    ```</span>
 
-<span class="sd">    Since these components are quite &#39;special&#39;, there are some extra methods to </span>
+<span class="sd">    Since these components are quite &#39;special&#39;, there are some extra methods to</span>
 <span class="sd">    work with them.</span>
 
 <span class="sd">    The following properties are available:</span>
@@ -379,7 +380,7 @@
 <span class="sd">     - `get_query` / `get_parameter`: get the value from the key.</span>
 <span class="sd">     - `set_query` / `set_parameter`: add/modify a key/value pair, getting</span>
 <span class="sd">       a new URL.</span>
-<span class="sd">     - `delete_query` / `delete_parameter`: remove a k/v pair, getting a new </span>
+<span class="sd">     - `delete_query` / `delete_parameter`: remove a k/v pair, getting a new</span>
 <span class="sd">       URL.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -456,13 +457,13 @@
 <span class="sd">        The URL path as a [`pathlib.PurePosixPath`](</span>
 <span class="sd">            https://docs.python.org/3/library/pathlib.html#pathlib.PurePosixPath).</span>
 <span class="sd">        This can be really useful for transforming the path component of a HTTP url:</span>
-<span class="sd">        </span>
+
 <span class="sd">        ```python</span>
 <span class="sd">        &gt;&gt;&gt; u = URL(&quot;https://example.com/some/path&quot;)</span>
 <span class="sd">        &gt;&gt;&gt; u.replace(path=u.path_as_posix.parent)</span>
 <span class="sd">        imurl.URL(&#39;https://example.com/some&#39;)</span>
 <span class="sd">        ```</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
@@ -592,7 +593,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a new `URL` by replacing attributes of the current `URL`.</span>
-<span class="sd">        </span>
+
 <span class="sd">        This method takes the same keyword arguments as the constructor,</span>
 <span class="sd">        but does not accept the URL string.</span>
 
@@ -607,15 +608,18 @@
         <span class="sd">&quot;&quot;&quot;Return whether a given key is a URL path parameter.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span>
 
-    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Given a path parameter key, return the parameter value.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
 
     <span class="k">def</span> <span class="nf">set_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a path parameter key and a value to add/replace, return a new `URL`</span>
 <span class="sd">        with that parameter set.</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -624,7 +628,7 @@
     <span class="k">def</span> <span class="nf">delete_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a path parameter key, return a new `URL` without that parameter.</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="k">del</span> <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
@@ -634,15 +638,18 @@
         <span class="sd">&quot;&quot;&quot;Return whether a given key is in the URL query parameters.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span>
 
-    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Given a query parameter key, return the query value.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
 
     <span class="k">def</span> <span class="nf">set_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a query parameter key and a value to add/replace, return a new `URL`</span>
 <span class="sd">        with that query parameter set.</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_query</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
         <span class="n">new_query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -678,10 +685,7 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_url_string</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">query_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&amp;&quot;</span><span class="p">,</span>
-        <span class="n">param_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">query_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&amp;&quot;</span><span class="p">,</span> <span class="n">param_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a `URL` class from a URL string. This isn&#39;t perfect - two valid</span>
@@ -769,6 +773,9 @@
             <span class="n">fragment</span><span class="o">=</span><span class="n">parsed_url</span><span class="o">.</span><span class="n">fragment</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">quote_components</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span>
@@ -813,11 +820,11 @@
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">URL</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A simple, immutable URL class.</span>
-<span class="sd">    </span>
+
 <span class="sd">    **URLs and their components**</span>
 
 <span class="sd">    URLs, as represented by this class, take the following general form (as</span>
-<span class="sd">    outlined by [RFC1738](https://datatracker.ietf.org/doc/html/rfc1738) and </span>
+<span class="sd">    outlined by [RFC1738](https://datatracker.ietf.org/doc/html/rfc1738) and</span>
 <span class="sd">    [RFC3986](https://datatracker.ietf.org/doc/html/rfc3986)):</span>
 
 <span class="sd">    ```plaintext</span>
@@ -832,7 +839,7 @@
 
 <span class="sd">    The constructor can take a URL string, URL components as key word arguments,</span>
 <span class="sd">    or a mixture of both (keyword arguments will override the URL string):</span>
-<span class="sd">    </span>
+
 <span class="sd">    ```python</span>
 <span class="sd">    &gt;&gt;&gt; URL(&#39;http://example.com&#39;)</span>
 <span class="sd">    imurl.URL(&#39;http://example.com&#39;)</span>
@@ -845,7 +852,7 @@
 <span class="sd">    As `URL` objects are immutable, a handy `URL.replace` method (which takes</span>
 <span class="sd">    the same arguments as the constructor) will create a new `URL` by replacing</span>
 <span class="sd">    parts from the original `URL` (similarly to how [`datetime`](</span>
-<span class="sd">        https://docs.python.org/3/library/datetime.html#datetime.date.replace) </span>
+<span class="sd">        https://docs.python.org/3/library/datetime.html#datetime.date.replace)</span>
 <span class="sd">    work in the stdlib):</span>
 
 <span class="sd">    ```python</span>
@@ -862,11 +869,11 @@
 
 <span class="sd">    **URL encoding**</span>
 
-<span class="sd">    Many special characters are supposed to be &#39;% encoded&#39; in URLs. With the </span>
+<span class="sd">    Many special characters are supposed to be &#39;% encoded&#39; in URLs. With the</span>
 <span class="sd">    `quote_components` flag set, keyword args to the constructor and to</span>
 <span class="sd">    `replace` are percent encoded using [`urllib.parse.quote`](</span>
 <span class="sd">        https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote).</span>
-<span class="sd">    This is set to `True` by default for the constructor, and `False` for </span>
+<span class="sd">    This is set to `True` by default for the constructor, and `False` for</span>
 <span class="sd">    arguments to `replace`.</span>
 
 <span class="sd">    ```python</span>
@@ -878,7 +885,7 @@
 <span class="sd">    ```</span>
 
 <span class="sd">    **Working with query/path parameters**</span>
-<span class="sd">    </span>
+
 <span class="sd">    Path parameters and query parameters are parts of the URL which can</span>
 <span class="sd">    be used to represent key-value data.</span>
 
@@ -892,7 +899,7 @@
 <span class="sd">    used in modern URL schemes, but have some historical significance. They&#39;re</span>
 <span class="sd">    typically delimited using a semicolon, but some examples use a comma.</span>
 <span class="sd">    This delimiter can be configured by changing `URL.param_delimiter`:</span>
-<span class="sd">    </span>
+
 <span class="sd">    ```plaintext</span>
 <span class="sd">    scheme://some-host.com/path/to/somewhere;these=are;path=params</span>
 <span class="sd">    ```</span>
@@ -908,7 +915,7 @@
 <span class="sd">    ```</span>
 
 <span class="sd">    Since these typically represent key-value data, `imurl` considers them to be</span>
-<span class="sd">    string-string mappings instead of strings, and they are set/accessed as such. </span>
+<span class="sd">    string-string mappings instead of strings, and they are set/accessed as such.</span>
 <span class="sd">    In the constructor/`replace`, these are passed as `param_dict` and `query_dict`.</span>
 
 <span class="sd">    ```python</span>
@@ -933,7 +940,7 @@
 <span class="sd">    imurl.URL(&#39;https://example.com/?key&#39;)</span>
 <span class="sd">    ```</span>
 
-<span class="sd">    Since these components are quite &#39;special&#39;, there are some extra methods to </span>
+<span class="sd">    Since these components are quite &#39;special&#39;, there are some extra methods to</span>
 <span class="sd">    work with them.</span>
 
 <span class="sd">    The following properties are available:</span>
@@ -947,7 +954,7 @@
 <span class="sd">     - `get_query` / `get_parameter`: get the value from the key.</span>
 <span class="sd">     - `set_query` / `set_parameter`: add/modify a key/value pair, getting</span>
 <span class="sd">       a new URL.</span>
-<span class="sd">     - `delete_query` / `delete_parameter`: remove a k/v pair, getting a new </span>
+<span class="sd">     - `delete_query` / `delete_parameter`: remove a k/v pair, getting a new</span>
 <span class="sd">       URL.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1024,13 +1031,13 @@
 <span class="sd">        The URL path as a [`pathlib.PurePosixPath`](</span>
 <span class="sd">            https://docs.python.org/3/library/pathlib.html#pathlib.PurePosixPath).</span>
 <span class="sd">        This can be really useful for transforming the path component of a HTTP url:</span>
-<span class="sd">        </span>
+
 <span class="sd">        ```python</span>
 <span class="sd">        &gt;&gt;&gt; u = URL(&quot;https://example.com/some/path&quot;)</span>
 <span class="sd">        &gt;&gt;&gt; u.replace(path=u.path_as_posix.parent)</span>
 <span class="sd">        imurl.URL(&#39;https://example.com/some&#39;)</span>
 <span class="sd">        ```</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
@@ -1160,7 +1167,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a new `URL` by replacing attributes of the current `URL`.</span>
-<span class="sd">        </span>
+
 <span class="sd">        This method takes the same keyword arguments as the constructor,</span>
 <span class="sd">        but does not accept the URL string.</span>
 
@@ -1175,15 +1182,18 @@
         <span class="sd">&quot;&quot;&quot;Return whether a given key is a URL path parameter.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span>
 
-    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Given a path parameter key, return the parameter value.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
 
     <span class="k">def</span> <span class="nf">set_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a path parameter key and a value to add/replace, return a new `URL`</span>
 <span class="sd">        with that parameter set.</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -1192,7 +1202,7 @@
     <span class="k">def</span> <span class="nf">delete_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a path parameter key, return a new `URL` without that parameter.</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="k">del</span> <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
@@ -1202,15 +1212,18 @@
         <span class="sd">&quot;&quot;&quot;Return whether a given key is in the URL query parameters.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span>
 
-    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Given a query parameter key, return the query value.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
 
     <span class="k">def</span> <span class="nf">set_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a query parameter key and a value to add/replace, return a new `URL`</span>
 <span class="sd">        with that query parameter set.</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_query</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
         <span class="n">new_query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -1246,10 +1259,7 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_url_string</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">query_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&amp;&quot;</span><span class="p">,</span>
-        <span class="n">param_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">query_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&amp;&quot;</span><span class="p">,</span> <span class="n">param_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a `URL` class from a URL string. This isn&#39;t perfect - two valid</span>
@@ -1338,6 +1348,9 @@
             <span class="n">quote_components</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span>
+
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span>
 
@@ -1371,7 +1384,7 @@
 <p><strong>URLs and their components</strong></p>
 
 <p>URLs, as represented by this class, take the following general form (as
-outlined by <a href="https://datatracker.ietf.org/doc/html/rfc1738">RFC1738</a> and 
+outlined by <a href="https://datatracker.ietf.org/doc/html/rfc1738">RFC1738</a> and
 <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC3986</a>):</p>
 
 <pre><code>[scheme:][//[username[:password]@]host[:port]][path][;parameters][?query][#fragment]
@@ -1399,7 +1412,7 @@ or a mixture of both (keyword arguments will override the URL string):</p>
 
 <p>As <code><a href="#URL">URL</a></code> objects are immutable, a handy <code><a href="#URL.replace">URL.replace</a></code> method (which takes
 the same arguments as the constructor) will create a new <code><a href="#URL">URL</a></code> by replacing
-parts from the original <code><a href="#URL">URL</a></code> (similarly to how <a href="https://docs.python.org/3/library/datetime.html#datetime.date.replace"><code>datetime</code></a> 
+parts from the original <code><a href="#URL">URL</a></code> (similarly to how <a href="https://docs.python.org/3/library/datetime.html#datetime.date.replace"><code>datetime</code></a>
 work in the stdlib):</p>
 
 <div class="codehilite"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">URL</span><span class="p">(</span><span class="s2">&quot;http://example.com&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;/index.html&quot;</span><span class="p">)</span>
@@ -1417,10 +1430,10 @@ or <code>None</code></li>
 
 <p><strong>URL encoding</strong></p>
 
-<p>Many special characters are supposed to be '% encoded' in URLs. With the 
+<p>Many special characters are supposed to be '% encoded' in URLs. With the
 <code>quote_components</code> flag set, keyword args to the constructor and to
 <code><a href="#URL.replace">replace</a></code> are percent encoded using <a href="https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote"><code>urllib.parse.quote</code></a>.
-This is set to <code>True</code> by default for the constructor, and <code>False</code> for 
+This is set to <code>True</code> by default for the constructor, and <code>False</code> for
 arguments to <code><a href="#URL.replace">replace</a></code>.</p>
 
 <div class="codehilite"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">u</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="s2">&quot;https://example.com)</span>
@@ -1458,7 +1471,7 @@ scheme://some-host.com/path/to/somewhere;path=params?query=params
 </code></pre>
 
 <p>Since these typically represent key-value data, <code><a href="../imurl.html">imurl</a></code> considers them to be
-string-string mappings instead of strings, and they are set/accessed as such. 
+string-string mappings instead of strings, and they are set/accessed as such.
 In the constructor/<code><a href="#URL.replace">replace</a></code>, these are passed as <code><a href="#URL.param_dict">param_dict</a></code> and <code><a href="#URL.query_dict">query_dict</a></code>.</p>
 
 <div class="codehilite"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">u</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="s2">&quot;https://example.com&quot;</span><span class="p">,</span> <span class="n">query_dict</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="s2">&quot;param&quot;</span><span class="p">))</span>
@@ -1481,7 +1494,7 @@ In the constructor/<code><a href="#URL.replace">replace</a></code>, these are pa
 <span class="n">imurl</span><span class="o">.</span><span class="n">URL</span><span class="p">(</span><span class="s1">&#39;https://example.com/?key&#39;</span><span class="p">)</span>
 </code></pre></div>
 
-<p>Since these components are quite 'special', there are some extra methods to 
+<p>Since these components are quite 'special', there are some extra methods to
 work with them.</p>
 
 <p>The following properties are available:</p>
@@ -1498,7 +1511,7 @@ work with them.</p>
 <li><code><a href="#URL.get_query">get_query</a></code> / <code><a href="#URL.get_parameter">get_parameter</a></code>: get the value from the key.</li>
 <li><code><a href="#URL.set_query">set_query</a></code> / <code><a href="#URL.set_parameter">set_parameter</a></code>: add/modify a key/value pair, getting
 a new URL.</li>
-<li><code><a href="#URL.delete_query">delete_query</a></code> / <code><a href="#URL.delete_parameter">delete_parameter</a></code>: remove a k/v pair, getting a new 
+<li><code><a href="#URL.delete_query">delete_query</a></code> / <code><a href="#URL.delete_parameter">delete_parameter</a></code>: remove a k/v pair, getting a new
 URL.</li>
 </ul>
 </div>
@@ -1509,19 +1522,19 @@ URL.</li>
 
         
             <span class="name">URL</span><span class="signature">(
-    url_string: Optional[str] = None,
+    url_string: Union[str, NoneType] = None,
     *,
-    scheme: Optional[str] = None,
-    username: Optional[str] = None,
-    password: Optional[str] = None,
-    host: Optional[str] = None,
-    port: Optional[int] = None,
+    scheme: Union[str, NoneType] = None,
+    username: Union[str, NoneType] = None,
+    password: Union[str, NoneType] = None,
+    host: Union[str, NoneType] = None,
+    port: Union[int, NoneType] = None,
     path: Union[str, pathlib.PurePosixPath, NoneType] = None,
-    param_dict: Optional[MutableMapping[str, Optional[str]]] = None,
+    param_dict: Union[MutableMapping[str, Union[str, NoneType]], NoneType] = None,
     param_delimiter: str = &#39;;&#39;,
-    query_dict: Optional[MutableMapping[str, Optional[str]]] = None,
+    query_dict: Union[MutableMapping[str, Union[str, NoneType]], NoneType] = None,
     query_delimiter: str = &#39;&amp;&#39;,
-    fragment: Optional[str] = None,
+    fragment: Union[str, NoneType] = None,
     quote_components: bool = True
 )</span>
     </div>
@@ -1701,7 +1714,7 @@ URL.</li>
                             <div id="URL.path_as_posix" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.path_as_posix">#&nbsp;&nbsp</a>
 
-        <span class="name">path_as_posix</span><span class="annotation">: Optional[pathlib.PurePosixPath]</span>
+        <span class="name">path_as_posix</span><span class="annotation">: Union[pathlib.PurePosixPath, NoneType]</span>
     </div>
 
             <div class="docstring"><p>The URL path as a <a href="https://docs.python.org/3/library/pathlib.html#pathlib.PurePosixPath"><code>pathlib.PurePosixPath</code></a>.
@@ -1718,7 +1731,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.parameters" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.parameters">#&nbsp;&nbsp</a>
 
-        <span class="name">parameters</span><span class="annotation">: Optional[str]</span>
+        <span class="name">parameters</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
             <div class="docstring"><p>The URL's path parameters as a string.</p>
@@ -1729,7 +1742,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.param_dict" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.param_dict">#&nbsp;&nbsp</a>
 
-        <span class="name">param_dict</span><span class="annotation">: MutableMapping[str, Optional[str]]</span>
+        <span class="name">param_dict</span><span class="annotation">: MutableMapping[str, Union[str, NoneType]]</span>
     </div>
 
             <div class="docstring"><p>A copy of the path parameter dictionary.</p>
@@ -1740,7 +1753,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.query" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.query">#&nbsp;&nbsp</a>
 
-        <span class="name">query</span><span class="annotation">: Optional[str]</span>
+        <span class="name">query</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
             <div class="docstring"><p>The URL query parameters as a string.</p>
@@ -1751,7 +1764,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.query_dict" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.query_dict">#&nbsp;&nbsp</a>
 
-        <span class="name">query_dict</span><span class="annotation">: MutableMapping[str, Optional[str]]</span>
+        <span class="name">query_dict</span><span class="annotation">: MutableMapping[str, Union[str, NoneType]]</span>
     </div>
 
             <div class="docstring"><p>A copy of the query parameter dictionary.</p>
@@ -1762,7 +1775,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.userinfo" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.userinfo">#&nbsp;&nbsp</a>
 
-        <span class="name">userinfo</span><span class="annotation">: Optional[str]</span>
+        <span class="name">userinfo</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
             <div class="docstring"><p>The URL's <code><a href="#URL.userinfo">userinfo</a></code> component.</p>
@@ -1778,7 +1791,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.netloc" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.netloc">#&nbsp;&nbsp</a>
 
-        <span class="name">netloc</span><span class="annotation">: Optional[str]</span>
+        <span class="name">netloc</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
             <div class="docstring"><p>The URL's network location component.</p>
@@ -1814,7 +1827,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
     self,
     *,
     quote_components: bool = False,
-    **url_dict: Union[str, MutableMapping[str, Optional[str]], NoneType]
+    **url_dict: Union[str, MutableMapping[str, Union[str, NoneType]], NoneType]
 ) -&gt; <a href="#URL">imurl.url.URL</a></span>:
     </div>
 
@@ -1828,7 +1841,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a new `URL` by replacing attributes of the current `URL`.</span>
-<span class="sd">        </span>
+
 <span class="sd">        This method takes the same keyword arguments as the constructor,</span>
 <span class="sd">        but does not accept the URL string.</span>
 
@@ -1877,14 +1890,17 @@ but does not accept the URL string.</p>
 
         
             <span class="def">def</span>
-            <span class="name">get_parameter</span><span class="signature">(self, key: str) -&gt; Optional[str]</span>:
+            <span class="name">get_parameter</span><span class="signature">(self, key: str, unquote: bool = True) -&gt; Union[str, NoneType]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Given a path parameter key, return the parameter value.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
 </pre></div>
 
         </details>
@@ -1899,7 +1915,7 @@ but does not accept the URL string.</p>
 
         
             <span class="def">def</span>
-            <span class="name">set_parameter</span><span class="signature">(self, key: str, value: Optional[str]) -&gt; <a href="#URL">imurl.url.URL</a></span>:
+            <span class="name">set_parameter</span><span class="signature">(self, key: str, value: Union[str, NoneType]) -&gt; <a href="#URL">imurl.url.URL</a></span>:
     </div>
 
                 <details>
@@ -1908,7 +1924,7 @@ but does not accept the URL string.</p>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a path parameter key and a value to add/replace, return a new `URL`</span>
 <span class="sd">        with that parameter set.</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -1936,7 +1952,7 @@ with that parameter set.</p>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">delete_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a path parameter key, return a new `URL` without that parameter.</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="k">del</span> <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
@@ -1977,14 +1993,17 @@ with that parameter set.</p>
 
         
             <span class="def">def</span>
-            <span class="name">get_query</span><span class="signature">(self, key: str) -&gt; Optional[str]</span>:
+            <span class="name">get_query</span><span class="signature">(self, key: str, unquote: bool = True) -&gt; Union[str, NoneType]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Given a query parameter key, return the query value.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
 </pre></div>
 
         </details>
@@ -1999,7 +2018,7 @@ with that parameter set.</p>
 
         
             <span class="def">def</span>
-            <span class="name">set_query</span><span class="signature">(self, key: str, value: Optional[str]) -&gt; <a href="#URL">imurl.url.URL</a></span>:
+            <span class="name">set_query</span><span class="signature">(self, key: str, value: Union[str, NoneType]) -&gt; <a href="#URL">imurl.url.URL</a></span>:
     </div>
 
                 <details>
@@ -2008,7 +2027,7 @@ with that parameter set.</p>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a query parameter key and a value to add/replace, return a new `URL`</span>
 <span class="sd">        with that query parameter set.</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_query</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
         <span class="n">new_query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -2124,10 +2143,7 @@ with that query parameter set.</p>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_url_string</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">query_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&amp;&quot;</span><span class="p">,</span>
-        <span class="n">param_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">query_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&amp;&quot;</span><span class="p">,</span> <span class="n">param_delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a `URL` class from a URL string. This isn&#39;t perfect - two valid</span>
@@ -2235,7 +2251,7 @@ sets of URL components can result in the same string.</p>
 
         
         <span class="def">class</span>
-        <span class="name">URLDict</span><wbr>(<span class="base">typing.TypedDict</span>):
+        <span class="name">URLDict</span><wbr>(<span class="base">builtins.dict</span>):
     </div>
 
                 <details>
@@ -2265,7 +2281,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.scheme" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.scheme">#&nbsp;&nbsp</a>
 
-        <span class="name">scheme</span><span class="annotation">: Optional[str]</span>
+        <span class="name">scheme</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
     
@@ -2274,7 +2290,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.username" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.username">#&nbsp;&nbsp</a>
 
-        <span class="name">username</span><span class="annotation">: Optional[str]</span>
+        <span class="name">username</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
     
@@ -2283,7 +2299,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.password" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.password">#&nbsp;&nbsp</a>
 
-        <span class="name">password</span><span class="annotation">: Optional[str]</span>
+        <span class="name">password</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
     
@@ -2292,7 +2308,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.host" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.host">#&nbsp;&nbsp</a>
 
-        <span class="name">host</span><span class="annotation">: Optional[str]</span>
+        <span class="name">host</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
     
@@ -2301,7 +2317,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.port" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.port">#&nbsp;&nbsp</a>
 
-        <span class="name">port</span><span class="annotation">: Optional[int]</span>
+        <span class="name">port</span><span class="annotation">: Union[int, NoneType]</span>
     </div>
 
     
@@ -2319,7 +2335,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.param_dict" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.param_dict">#&nbsp;&nbsp</a>
 
-        <span class="name">param_dict</span><span class="annotation">: MutableMapping[str, Optional[str]]</span>
+        <span class="name">param_dict</span><span class="annotation">: MutableMapping[str, Union[str, NoneType]]</span>
     </div>
 
     
@@ -2337,7 +2353,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.query_dict" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.query_dict">#&nbsp;&nbsp</a>
 
-        <span class="name">query_dict</span><span class="annotation">: MutableMapping[str, Optional[str]]</span>
+        <span class="name">query_dict</span><span class="annotation">: MutableMapping[str, Union[str, NoneType]]</span>
     </div>
 
     
@@ -2355,7 +2371,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.fragment" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.fragment">#&nbsp;&nbsp</a>
 
-        <span class="name">fragment</span><span class="annotation">: Optional[str]</span>
+        <span class="name">fragment</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
     
@@ -2365,7 +2381,7 @@ sets of URL components can result in the same string.</p>
                                 <h5>Inherited Members</h5>
                                 <dl>
                                     <div><dt>builtins.dict</dt>
-                                <dd id="URLDict.__init__" class="class">dict</dd>
+                                <dd id="URLDict.__init__" class="function">dict</dd>
                 <dd id="URLDict.get" class="function">get</dd>
                 <dd id="URLDict.setdefault" class="function">setdefault</dd>
                 <dd id="URLDict.pop" class="function">pop</dd>

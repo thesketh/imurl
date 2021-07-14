@@ -1,4 +1,5 @@
 """The URL class."""
+import json
 import urllib.parse
 from copy import copy
 from pathlib import PurePosixPath
@@ -420,9 +421,12 @@ class URL:
         """Return whether a given key is a URL path parameter."""
         return key in self._param_dict
 
-    def get_parameter(self, key: str) -> Optional[str]:
+    def get_parameter(self, key: str, unquote: bool = True) -> Optional[str]:
         """Given a path parameter key, return the parameter value."""
-        return self._param_dict[key]
+        value = self._param_dict[key]
+        if unquote and value is not None:
+            return urllib.parse.unquote(value)
+        return value
 
     def set_parameter(self, key: str, value: Optional[str]) -> "URL":
         """
@@ -447,9 +451,12 @@ class URL:
         """Return whether a given key is in the URL query parameters."""
         return key in self._query_dict
 
-    def get_query(self, key: str) -> Optional[str]:
+    def get_query(self, key: str, unquote: bool = True) -> Optional[str]:
         """Given a query parameter key, return the query value."""
-        return self._query_dict[key]
+        value = self._query_dict[key]
+        if unquote and value is not None:
+            return urllib.parse.unquote(value)
+        return value
 
     def set_query(self, key: str, value: Optional[str]) -> "URL":
         """
@@ -491,10 +498,7 @@ class URL:
 
     @classmethod
     def from_url_string(
-        cls,
-        url: str,
-        query_delimiter: str = "&",
-        param_delimiter: str = ";",
+        cls, url: str, query_delimiter: str = "&", param_delimiter: str = ";",
     ) -> "URL":
         """
         Create a `URL` class from a URL string. This isn't perfect - two valid
@@ -582,6 +586,9 @@ class URL:
             fragment=parsed_url.fragment or None,
             quote_components=False,
         )
+
+    def __hash__(self) -> int:
+        return hash(json.dumps(self.__dict__))
 
     def __str__(self) -> str:
         return self.url
