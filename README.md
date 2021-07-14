@@ -10,7 +10,8 @@ URL structures, with support for a wide range of URL/URI schemes.
 
 ## Examples
 
-Here are some quick examples for `imurl`. There are more in the documentation: `imurl.URL`.
+Here are some quick examples for `imurl`. [There are more in the documentation.](
+    https://thesketh.github.io/imurl/imurl/url.html#URL).
 
 URLs can be created from URL strings, and have the attributes you'd expect:
 

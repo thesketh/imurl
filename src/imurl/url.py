@@ -57,8 +57,6 @@ def _encode_url_dict(url_dict: URLDict) -> URLDict:
 # pylint: disable=too-many-instance-attributes
 class URL:
     """
-    ## `URL`
-
     A simple, immutable URL class.
     
     **URLs and their components**
@@ -144,7 +142,7 @@ class URL:
     scheme://some-host.com/path/to/somewhere;these=are;path=params
     ```
 
-    Query parameters come after the path section of the URL _and_ after
+    Query parameters come after the path section of the URL *and* after
     the path parameters. The query section starts with a question mark,
     and then uses a delimiter between key-value pairs (typically an ampersand,
     though this can be configured by changing `URL.query_delimiter`):

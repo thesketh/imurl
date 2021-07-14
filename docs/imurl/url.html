@@ -244,8 +244,6 @@
 <span class="c1"># pylint: disable=too-many-instance-attributes</span>
 <span class="k">class</span> <span class="nc">URL</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    ## `URL`</span>
-
 <span class="sd">    A simple, immutable URL class.</span>
 <span class="sd">    </span>
 <span class="sd">    **URLs and their components**</span>
@@ -331,7 +329,7 @@
 <span class="sd">    scheme://some-host.com/path/to/somewhere;these=are;path=params</span>
 <span class="sd">    ```</span>
 
-<span class="sd">    Query parameters come after the path section of the URL _and_ after</span>
+<span class="sd">    Query parameters come after the path section of the URL *and* after</span>
 <span class="sd">    the path parameters. The query section starts with a question mark,</span>
 <span class="sd">    and then uses a delimiter between key-value pairs (typically an ampersand,</span>
 <span class="sd">    though this can be configured by changing `URL.query_delimiter`):</span>
@@ -808,8 +806,6 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">URL</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    ## `URL`</span>
-
 <span class="sd">    A simple, immutable URL class.</span>
 <span class="sd">    </span>
 <span class="sd">    **URLs and their components**</span>
@@ -895,7 +891,7 @@
 <span class="sd">    scheme://some-host.com/path/to/somewhere;these=are;path=params</span>
 <span class="sd">    ```</span>
 
-<span class="sd">    Query parameters come after the path section of the URL _and_ after</span>
+<span class="sd">    Query parameters come after the path section of the URL *and* after</span>
 <span class="sd">    the path parameters. The query section starts with a question mark,</span>
 <span class="sd">    and then uses a delimiter between key-value pairs (typically an ampersand,</span>
 <span class="sd">    though this can be configured by changing `URL.query_delimiter`):</span>
@@ -1358,9 +1354,7 @@
 
         </details>
 
-            <div class="docstring"><h2 id="url"><code><a href="#URL">URL</a></code></h2>
-
-<p>A simple, immutable URL class.</p>
+            <div class="docstring"><p>A simple, immutable URL class.</p>
 
 <p><strong>URLs and their components</strong></p>
 
@@ -1442,7 +1436,7 @@ This delimiter can be configured by changing <code><a href="#URL.param_delimiter
 <pre><code>scheme://some-host.com/path/to/somewhere;these=are;path=params
 </code></pre>
 
-<p>Query parameters come after the path section of the URL _and_ after
+<p>Query parameters come after the path section of the URL <em>and</em> after
 the path parameters. The query section starts with a question mark,
 and then uses a delimiter between key-value pairs (typically an ampersand,
 though this can be configured by changing <code><a href="#URL.query_delimiter">URL.query_delimiter</a></code>):</p>
