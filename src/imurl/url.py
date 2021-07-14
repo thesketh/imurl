@@ -58,11 +58,11 @@ def _encode_url_dict(url_dict: URLDict) -> URLDict:
 class URL:
     """
     A simple, immutable URL class.
-    
+
     **URLs and their components**
 
     URLs, as represented by this class, take the following general form (as
-    outlined by [RFC1738](https://datatracker.ietf.org/doc/html/rfc1738) and 
+    outlined by [RFC1738](https://datatracker.ietf.org/doc/html/rfc1738) and
     [RFC3986](https://datatracker.ietf.org/doc/html/rfc3986)):
 
     ```plaintext
@@ -77,7 +77,7 @@ class URL:
 
     The constructor can take a URL string, URL components as key word arguments,
     or a mixture of both (keyword arguments will override the URL string):
-    
+
     ```python
     >>> URL('http://example.com')
     imurl.URL('http://example.com')
@@ -90,7 +90,7 @@ class URL:
     As `URL` objects are immutable, a handy `URL.replace` method (which takes
     the same arguments as the constructor) will create a new `URL` by replacing
     parts from the original `URL` (similarly to how [`datetime`](
-        https://docs.python.org/3/library/datetime.html#datetime.date.replace) 
+        https://docs.python.org/3/library/datetime.html#datetime.date.replace)
     work in the stdlib):
 
     ```python
@@ -107,11 +107,11 @@ class URL:
 
     **URL encoding**
 
-    Many special characters are supposed to be '% encoded' in URLs. With the 
+    Many special characters are supposed to be '% encoded' in URLs. With the
     `quote_components` flag set, keyword args to the constructor and to
     `replace` are percent encoded using [`urllib.parse.quote`](
         https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote).
-    This is set to `True` by default for the constructor, and `False` for 
+    This is set to `True` by default for the constructor, and `False` for
     arguments to `replace`.
 
     ```python
@@ -123,7 +123,7 @@ class URL:
     ```
 
     **Working with query/path parameters**
-    
+
     Path parameters and query parameters are parts of the URL which can
     be used to represent key-value data.
 
@@ -137,7 +137,7 @@ class URL:
     used in modern URL schemes, but have some historical significance. They're
     typically delimited using a semicolon, but some examples use a comma.
     This delimiter can be configured by changing `URL.param_delimiter`:
-    
+
     ```plaintext
     scheme://some-host.com/path/to/somewhere;these=are;path=params
     ```
@@ -153,7 +153,7 @@ class URL:
     ```
 
     Since these typically represent key-value data, `imurl` considers them to be
-    string-string mappings instead of strings, and they are set/accessed as such. 
+    string-string mappings instead of strings, and they are set/accessed as such.
     In the constructor/`replace`, these are passed as `param_dict` and `query_dict`.
 
     ```python
@@ -178,7 +178,7 @@ class URL:
     imurl.URL('https://example.com/?key')
     ```
 
-    Since these components are quite 'special', there are some extra methods to 
+    Since these components are quite 'special', there are some extra methods to
     work with them.
 
     The following properties are available:
@@ -192,7 +192,7 @@ class URL:
      - `get_query` / `get_parameter`: get the value from the key.
      - `set_query` / `set_parameter`: add/modify a key/value pair, getting
        a new URL.
-     - `delete_query` / `delete_parameter`: remove a k/v pair, getting a new 
+     - `delete_query` / `delete_parameter`: remove a k/v pair, getting a new
        URL.
 
     """
@@ -269,13 +269,13 @@ class URL:
         The URL path as a [`pathlib.PurePosixPath`](
             https://docs.python.org/3/library/pathlib.html#pathlib.PurePosixPath).
         This can be really useful for transforming the path component of a HTTP url:
-        
+
         ```python
         >>> u = URL("https://example.com/some/path")
         >>> u.replace(path=u.path_as_posix.parent)
         imurl.URL('https://example.com/some')
         ```
-        
+
         """
         if not self.path:
             return None
@@ -403,7 +403,13 @@ class URL:
         quote_components: bool = False,
         **url_dict: Union[str, MutableMapping[str, Optional[str]], None],
     ) -> "URL":
-        """Create a new `URL` by replacing attributes of the current `URL`."""
+        """
+        Create a new `URL` by replacing attributes of the current `URL`.
+
+        This method takes the same keyword arguments as the constructor,
+        but does not accept the URL string.
+
+        """
         dictionary = self.to_dict()
         if quote_components:
             url_dict = _encode_url_dict(url_dict)  # type: ignore
@@ -422,7 +428,7 @@ class URL:
         """
         Given a path parameter key and a value to add/replace, return a new `URL`
         with that parameter set.
-        
+
         """
         new_params = copy(self._param_dict)
         new_params[key] = value
@@ -431,7 +437,7 @@ class URL:
     def delete_parameter(self, key: str) -> "URL":
         """
         Given a path parameter key, return a new `URL` without that parameter.
-        
+
         """
         new_params = copy(self._param_dict)
         del new_params[key]
@@ -449,7 +455,7 @@ class URL:
         """
         Given a query parameter key and a value to add/replace, return a new `URL`
         with that query parameter set.
-        
+
         """
         new_query = copy(self._query_dict)
         new_query[key] = value

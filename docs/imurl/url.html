@@ -590,7 +590,13 @@
         <span class="n">quote_components</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">url_dict</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="kc">None</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Create a new `URL` by replacing attributes of the current `URL`.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new `URL` by replacing attributes of the current `URL`.</span>
+<span class="sd">        </span>
+<span class="sd">        This method takes the same keyword arguments as the constructor,</span>
+<span class="sd">        but does not accept the URL string.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dictionary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">quote_components</span><span class="p">:</span>
             <span class="n">url_dict</span> <span class="o">=</span> <span class="n">_encode_url_dict</span><span class="p">(</span><span class="n">url_dict</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
@@ -1152,7 +1158,13 @@
         <span class="n">quote_components</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">url_dict</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="kc">None</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Create a new `URL` by replacing attributes of the current `URL`.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new `URL` by replacing attributes of the current `URL`.</span>
+<span class="sd">        </span>
+<span class="sd">        This method takes the same keyword arguments as the constructor,</span>
+<span class="sd">        but does not accept the URL string.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dictionary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">quote_components</span><span class="p">:</span>
             <span class="n">url_dict</span> <span class="o">=</span> <span class="n">_encode_url_dict</span><span class="p">(</span><span class="n">url_dict</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
@@ -1814,7 +1826,13 @@ This can be really useful for transforming the path component of a HTTP url:</p>
         <span class="n">quote_components</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">url_dict</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="kc">None</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Create a new `URL` by replacing attributes of the current `URL`.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new `URL` by replacing attributes of the current `URL`.</span>
+<span class="sd">        </span>
+<span class="sd">        This method takes the same keyword arguments as the constructor,</span>
+<span class="sd">        but does not accept the URL string.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dictionary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">quote_components</span><span class="p">:</span>
             <span class="n">url_dict</span> <span class="o">=</span> <span class="n">_encode_url_dict</span><span class="p">(</span><span class="n">url_dict</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
@@ -1825,6 +1843,9 @@ This can be really useful for transforming the path component of a HTTP url:</p>
         </details>
 
             <div class="docstring"><p>Create a new <code><a href="#URL">URL</a></code> by replacing attributes of the current <code><a href="#URL">URL</a></code>.</p>
+
+<p>This method takes the same keyword arguments as the constructor,
+but does not accept the URL string.</p>
 </div>
 
 
