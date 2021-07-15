@@ -236,9 +236,9 @@ class TestBuilder:
 
     def test_set_path_with_special_chars(self):
         url = URL.from_url_string("http://www.google.com/").replace(
-            path="/search something", quote_components=True
+            path="/search something"
         )
-        assert "/search%20something" == url.path
+        assert url.url == "http://www.google.com/search%20something"
 
     def test_set_query(self):
         url = URL.from_url_string("http://www.google.com/").replace(
