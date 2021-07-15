@@ -188,14 +188,25 @@
             <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;The URL class.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">urllib.parse</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">PurePosixPath</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypedDict</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">Iterator</span><span class="p">,</span>
+    <span class="n">MutableMapping</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">TypedDict</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;URL&quot;</span><span class="p">,</span> <span class="s2">&quot;URLDict&quot;</span><span class="p">]</span>
 
 
-<span class="n">Parameters</span> <span class="o">=</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
+<span class="n">ParameterValue</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span>
+<span class="n">Parameters</span> <span class="o">=</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParameterValue</span><span class="p">]</span>
 
 
 <span class="k">class</span> <span class="nc">URLDict</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -236,8 +247,18 @@
 
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">old_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">key</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">new_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">sub_value</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">sub_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">sub_value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">sub_value</span><span class="p">)</span>
+                    <span class="n">new_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sub_value</span><span class="p">)</span>
+
+                <span class="n">value</span> <span class="o">=</span> <span class="n">new_values</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="n">value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
             <span class="n">new_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
         <span class="n">quoted_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_dict</span>  <span class="c1"># type: ignore</span>
@@ -495,12 +516,12 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">param_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;A copy of the path parameter dictionary.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">query_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;A copy of the query parameter dictionary.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">userinfo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -593,10 +614,10 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
             <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
 
-        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span>
-        <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="k">if</span> <span class="n">parameters</span><span class="p">:</span>
             <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_delimiter</span><span class="p">)</span>
-            <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span>
         <span class="k">if</span> <span class="n">query</span><span class="p">:</span>
@@ -631,20 +652,17 @@
         <span class="sd">&quot;&quot;&quot;Return whether a given key is a URL path parameter.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span>
 
-    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Given a path parameter key, return the parameter value.&quot;&quot;&quot;</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">value</span>
+    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterValue</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Given a path parameter key, return a copy of the parameter value.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">set_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">set_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ParameterValue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a path parameter key and a value to add/replace, return a new `URL`</span>
 <span class="sd">        with that parameter set.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
+        <span class="n">new_params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">param_dict</span><span class="o">=</span><span class="n">new_params</span><span class="p">)</span>
 
@@ -653,7 +671,7 @@
 <span class="sd">        Given a path parameter key, return a new `URL` without that parameter.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
+        <span class="n">new_params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="k">del</span> <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">param_dict</span><span class="o">=</span><span class="n">new_params</span><span class="p">)</span>
 
@@ -661,12 +679,9 @@
         <span class="sd">&quot;&quot;&quot;Return whether a given key is in the URL query parameters.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span>
 
-    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Given a query parameter key, return the query value.&quot;&quot;&quot;</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">value</span>
+    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterValue</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Given a query parameter key, return a copy of the query value.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">set_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -674,13 +689,13 @@
 <span class="sd">        with that query parameter set.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_query</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
+        <span class="n">new_query</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
         <span class="n">new_query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">query_dict</span><span class="o">=</span><span class="n">new_query</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">delete_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Given a query parameter key, return a new `URL` without that query.&quot;&quot;&quot;</span>
-        <span class="n">new_query</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
+        <span class="n">new_query</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
         <span class="k">del</span> <span class="n">new_query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">query_dict</span><span class="o">=</span><span class="n">new_query</span><span class="p">)</span>
 
@@ -702,7 +717,7 @@
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;query_dict&quot;</span><span class="p">,</span> <span class="s2">&quot;param_dict&quot;</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
-                <span class="n">dictionary</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># type: ignore</span>
+                <span class="n">dictionary</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
         <span class="k">return</span> <span class="n">dictionary</span>
 
@@ -731,6 +746,8 @@
         <span class="c1">#  - If there&#39;s a slash in a host, it&#39;s actually a combined host and</span>
         <span class="c1">#    path.</span>
         <span class="n">path</span><span class="p">,</span> <span class="n">host</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">path</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">hostname</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># Need examples for these - I triggered it manually before but can&#39;t</span>
+        <span class="c1"># find the URL I used.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">scheme</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
                 <span class="n">path</span><span class="p">,</span> <span class="n">host</span> <span class="o">=</span> <span class="n">host</span><span class="p">,</span> <span class="n">path</span>
@@ -745,7 +762,9 @@
             <span class="n">port</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">params</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="n">message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">message</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Port could not be cast to integer value&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">message</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span>
+                <span class="s2">&quot;Port could not be cast to integer&quot;</span>
+            <span class="p">):</span>  <span class="c1"># pragma: no cover</span>
                 <span class="k">raise</span>
 
             <span class="n">unparsed_port_string</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
@@ -759,31 +778,11 @@
 
         <span class="c1"># Capture URL query parameters as dict: &#39;;key=value&#39; -&gt; {&#39;key&#39;: &#39;value&#39;}.</span>
         <span class="c1"># Keys without values are stored with &#39;None&#39; as the value.</span>
-        <span class="n">query</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">query</span><span class="p">:</span>
-            <span class="n">query_string</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;?&quot;</span><span class="p">)</span>
+        <span class="n">param_string</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="n">param_delimiter</span><span class="p">)</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_k_v_string</span><span class="p">(</span><span class="n">param_string</span><span class="p">,</span> <span class="n">param_delimiter</span><span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">query_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">query_delimiter</span><span class="p">):</span>
-                <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
-                <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> <span class="kc">None</span>
-                <span class="n">query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-
-        <span class="c1"># And the same with path parameters.</span>
-        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
-            <span class="n">param_string</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="n">param_delimiter</span><span class="p">)</span>
-
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">param_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">param_delimiter</span><span class="p">):</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> <span class="kc">None</span>
-                <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">query_string</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;?&quot;</span><span class="p">)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_k_v_string</span><span class="p">(</span><span class="n">query_string</span><span class="p">,</span> <span class="n">query_delimiter</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">scheme</span><span class="o">=</span><span class="n">parsed_url</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
@@ -802,23 +801,58 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_build_k_v_string</span><span class="p">(</span><span class="n">dictionary</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Build a string from an unencoded dict and a delimiter.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Build a string from an unencoded parameter dict and a delimiter.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">dictionary</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
-        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">iterate_k_v_pairs</span><span class="p">(</span>
+            <span class="n">param_seq</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParameterValue</span><span class="p">]]</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+            <span class="sd">&quot;&quot;&quot;Loop through key/value pairs and yield formatted strings.&quot;&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">param_seq</span><span class="p">:</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">key</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">iterable</span> <span class="o">=</span> <span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">sub_value</span><span class="p">)</span> <span class="k">for</span> <span class="n">sub_value</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">string</span> <span class="ow">in</span> <span class="n">iterate_k_v_pairs</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
+                        <span class="k">yield</span> <span class="n">string</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+                    <span class="k">yield</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">items</span> <span class="o">=</span> <span class="n">iterate_k_v_pairs</span><span class="p">(</span><span class="n">dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">delimiter</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_k_v_string</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Parse a string into an unencoded parameter dict, given a delimiter.&quot;&quot;&quot;</span>
+        <span class="n">dictionary</span><span class="p">:</span> <span class="n">Parameters</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">):</span>
+            <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+            <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> <span class="kc">None</span>
+
+            <span class="n">key</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span>
+                <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">current_value</span> <span class="o">=</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">current_value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">current_value</span><span class="p">,</span> <span class="n">value</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">dictionary</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span>
@@ -829,11 +863,13 @@
             <span class="k">return</span> <span class="s2">&quot;imurl.URL()&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;imurl.URL(</span><span class="si">{</span><span class="n">url</span><span class="si">!r}</span><span class="s2">)&quot;</span>
 
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span>
+
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="c1"># Allow equality comparisons with strings.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">URL</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">url</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">hash</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
         <span class="c1"># Ensuring we can freeze instances after instantiation.</span>
@@ -1114,12 +1150,12 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">param_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;A copy of the path parameter dictionary.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">query_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;A copy of the query parameter dictionary.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">userinfo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -1212,10 +1248,10 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
             <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
 
-        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span>
-        <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="k">if</span> <span class="n">parameters</span><span class="p">:</span>
             <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_delimiter</span><span class="p">)</span>
-            <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span>
         <span class="k">if</span> <span class="n">query</span><span class="p">:</span>
@@ -1250,20 +1286,17 @@
         <span class="sd">&quot;&quot;&quot;Return whether a given key is a URL path parameter.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span>
 
-    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Given a path parameter key, return the parameter value.&quot;&quot;&quot;</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">value</span>
+    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterValue</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Given a path parameter key, return a copy of the parameter value.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">set_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">set_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ParameterValue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a path parameter key and a value to add/replace, return a new `URL`</span>
 <span class="sd">        with that parameter set.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
+        <span class="n">new_params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">param_dict</span><span class="o">=</span><span class="n">new_params</span><span class="p">)</span>
 
@@ -1272,7 +1305,7 @@
 <span class="sd">        Given a path parameter key, return a new `URL` without that parameter.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
+        <span class="n">new_params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="k">del</span> <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">param_dict</span><span class="o">=</span><span class="n">new_params</span><span class="p">)</span>
 
@@ -1280,12 +1313,9 @@
         <span class="sd">&quot;&quot;&quot;Return whether a given key is in the URL query parameters.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span>
 
-    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Given a query parameter key, return the query value.&quot;&quot;&quot;</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">value</span>
+    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterValue</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Given a query parameter key, return a copy of the query value.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">set_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1293,13 +1323,13 @@
 <span class="sd">        with that query parameter set.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_query</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
+        <span class="n">new_query</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
         <span class="n">new_query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">query_dict</span><span class="o">=</span><span class="n">new_query</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">delete_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Given a query parameter key, return a new `URL` without that query.&quot;&quot;&quot;</span>
-        <span class="n">new_query</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
+        <span class="n">new_query</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
         <span class="k">del</span> <span class="n">new_query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">query_dict</span><span class="o">=</span><span class="n">new_query</span><span class="p">)</span>
 
@@ -1321,7 +1351,7 @@
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;query_dict&quot;</span><span class="p">,</span> <span class="s2">&quot;param_dict&quot;</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
-                <span class="n">dictionary</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># type: ignore</span>
+                <span class="n">dictionary</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
         <span class="k">return</span> <span class="n">dictionary</span>
 
@@ -1350,6 +1380,8 @@
         <span class="c1">#  - If there&#39;s a slash in a host, it&#39;s actually a combined host and</span>
         <span class="c1">#    path.</span>
         <span class="n">path</span><span class="p">,</span> <span class="n">host</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">path</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">hostname</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># Need examples for these - I triggered it manually before but can&#39;t</span>
+        <span class="c1"># find the URL I used.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">scheme</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
                 <span class="n">path</span><span class="p">,</span> <span class="n">host</span> <span class="o">=</span> <span class="n">host</span><span class="p">,</span> <span class="n">path</span>
@@ -1364,7 +1396,9 @@
             <span class="n">port</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">params</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="n">message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">message</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Port could not be cast to integer value&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">message</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span>
+                <span class="s2">&quot;Port could not be cast to integer&quot;</span>
+            <span class="p">):</span>  <span class="c1"># pragma: no cover</span>
                 <span class="k">raise</span>
 
             <span class="n">unparsed_port_string</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
@@ -1378,31 +1412,11 @@
 
         <span class="c1"># Capture URL query parameters as dict: &#39;;key=value&#39; -&gt; {&#39;key&#39;: &#39;value&#39;}.</span>
         <span class="c1"># Keys without values are stored with &#39;None&#39; as the value.</span>
-        <span class="n">query</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">query</span><span class="p">:</span>
-            <span class="n">query_string</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;?&quot;</span><span class="p">)</span>
+        <span class="n">param_string</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="n">param_delimiter</span><span class="p">)</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_k_v_string</span><span class="p">(</span><span class="n">param_string</span><span class="p">,</span> <span class="n">param_delimiter</span><span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">query_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">query_delimiter</span><span class="p">):</span>
-                <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
-                <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> <span class="kc">None</span>
-                <span class="n">query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-
-        <span class="c1"># And the same with path parameters.</span>
-        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
-            <span class="n">param_string</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="n">param_delimiter</span><span class="p">)</span>
-
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">param_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">param_delimiter</span><span class="p">):</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> <span class="kc">None</span>
-                <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">query_string</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;?&quot;</span><span class="p">)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_k_v_string</span><span class="p">(</span><span class="n">query_string</span><span class="p">,</span> <span class="n">query_delimiter</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">scheme</span><span class="o">=</span><span class="n">parsed_url</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
@@ -1421,23 +1435,58 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_build_k_v_string</span><span class="p">(</span><span class="n">dictionary</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Build a string from an unencoded dict and a delimiter.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Build a string from an unencoded parameter dict and a delimiter.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">dictionary</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
-        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">iterate_k_v_pairs</span><span class="p">(</span>
+            <span class="n">param_seq</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParameterValue</span><span class="p">]]</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+            <span class="sd">&quot;&quot;&quot;Loop through key/value pairs and yield formatted strings.&quot;&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">param_seq</span><span class="p">:</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">key</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">iterable</span> <span class="o">=</span> <span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">sub_value</span><span class="p">)</span> <span class="k">for</span> <span class="n">sub_value</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">string</span> <span class="ow">in</span> <span class="n">iterate_k_v_pairs</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
+                        <span class="k">yield</span> <span class="n">string</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+                    <span class="k">yield</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">items</span> <span class="o">=</span> <span class="n">iterate_k_v_pairs</span><span class="p">(</span><span class="n">dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">delimiter</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_k_v_string</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Parse a string into an unencoded parameter dict, given a delimiter.&quot;&quot;&quot;</span>
+        <span class="n">dictionary</span><span class="p">:</span> <span class="n">Parameters</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">):</span>
+            <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+            <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> <span class="kc">None</span>
+
+            <span class="n">key</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span>
+                <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">current_value</span> <span class="o">=</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">current_value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">current_value</span><span class="p">,</span> <span class="n">value</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">dictionary</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span>
@@ -1448,11 +1497,13 @@
             <span class="k">return</span> <span class="s2">&quot;imurl.URL()&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;imurl.URL(</span><span class="si">{</span><span class="n">url</span><span class="si">!r}</span><span class="s2">)&quot;</span>
 
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span>
+
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="c1"># Allow equality comparisons with strings.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">URL</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">url</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">hash</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
         <span class="c1"># Ensuring we can freeze instances after instantiation.</span>
@@ -1632,17 +1683,17 @@ URL.</li>
             <span class="name">URL</span><span class="signature">(
     url: Union[<a href="#URL">imurl.url.URL</a>, str, NoneType] = None,
     *,
-    scheme: Optional[str] = None,
-    username: Optional[str] = None,
-    password: Optional[str] = None,
-    host: Optional[str] = None,
-    port: Optional[int] = None,
+    scheme: Union[str, NoneType] = None,
+    username: Union[str, NoneType] = None,
+    password: Union[str, NoneType] = None,
+    host: Union[str, NoneType] = None,
+    port: Union[int, NoneType] = None,
     path: Union[str, pathlib.PurePosixPath, NoneType] = None,
-    param_dict: Optional[MutableMapping[str, Optional[str]]] = None,
+    param_dict: Union[MutableMapping[str, Union[str, NoneType, List[Union[str, NoneType]]]], NoneType] = None,
     param_delimiter: str = &#39;;&#39;,
-    query_dict: Optional[MutableMapping[str, Optional[str]]] = None,
+    query_dict: Union[MutableMapping[str, Union[str, NoneType, List[Union[str, NoneType]]]], NoneType] = None,
     query_delimiter: str = &#39;&amp;&#39;,
-    fragment: Optional[str] = None,
+    fragment: Union[str, NoneType] = None,
     components_encoded: bool = False
 )</span>
     </div>
@@ -1826,7 +1877,7 @@ URL.</li>
                             <div id="URL.path_as_posix" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.path_as_posix">#&nbsp;&nbsp</a>
 
-        <span class="name">path_as_posix</span><span class="annotation">: Optional[pathlib.PurePosixPath]</span>
+        <span class="name">path_as_posix</span><span class="annotation">: Union[pathlib.PurePosixPath, NoneType]</span>
     </div>
 
             <div class="docstring"><p>The URL path as a <a href="https://docs.python.org/3/library/pathlib.html#pathlib.PurePosixPath"><code>pathlib.PurePosixPath</code></a>.
@@ -1843,7 +1894,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.param_dict" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.param_dict">#&nbsp;&nbsp</a>
 
-        <span class="name">param_dict</span><span class="annotation">: MutableMapping[str, Optional[str]]</span>
+        <span class="name">param_dict</span><span class="annotation">: MutableMapping[str, Union[str, NoneType, List[Union[str, NoneType]]]]</span>
     </div>
 
             <div class="docstring"><p>A copy of the path parameter dictionary.</p>
@@ -1854,7 +1905,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.query_dict" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.query_dict">#&nbsp;&nbsp</a>
 
-        <span class="name">query_dict</span><span class="annotation">: MutableMapping[str, Optional[str]]</span>
+        <span class="name">query_dict</span><span class="annotation">: MutableMapping[str, Union[str, NoneType, List[Union[str, NoneType]]]]</span>
     </div>
 
             <div class="docstring"><p>A copy of the query parameter dictionary.</p>
@@ -1865,7 +1916,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.userinfo" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.userinfo">#&nbsp;&nbsp</a>
 
-        <span class="name">userinfo</span><span class="annotation">: Optional[str]</span>
+        <span class="name">userinfo</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
             <div class="docstring"><p>The URL's <code><a href="#URL.userinfo">userinfo</a></code> component.</p>
@@ -1883,7 +1934,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.netloc" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.netloc">#&nbsp;&nbsp</a>
 
-        <span class="name">netloc</span><span class="annotation">: Optional[str]</span>
+        <span class="name">netloc</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
             <div class="docstring"><p>The URL's network location component.</p>
@@ -1901,7 +1952,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.parameters" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.parameters">#&nbsp;&nbsp</a>
 
-        <span class="name">parameters</span><span class="annotation">: Optional[str]</span>
+        <span class="name">parameters</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
             <div class="docstring"><p>The URL's path parameters, encoded as they are in the URL.</p>
@@ -1912,7 +1963,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
                             <div id="URL.query" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URL.query">#&nbsp;&nbsp</a>
 
-        <span class="name">query</span><span class="annotation">: Optional[str]</span>
+        <span class="name">query</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
             <div class="docstring"><p>The URL's query parameters, encoded as they are in the URL.</p>
@@ -1943,7 +1994,7 @@ This can be really useful for transforming the path component of a HTTP url:</p>
     self,
     *,
     components_encoded: bool = False,
-    **url_dict: Union[str, MutableMapping[str, Optional[str]], pathlib.PurePosixPath, NoneType]
+    **url_dict: Union[str, MutableMapping[str, Union[str, NoneType, List[Union[str, NoneType]]]], pathlib.PurePosixPath, NoneType]
 ) -&gt; <a href="#URL">imurl.url.URL</a></span>:
     </div>
 
@@ -2006,22 +2057,19 @@ but does not accept the URL string.</p>
 
         
             <span class="def">def</span>
-            <span class="name">get_parameter</span><span class="signature">(self, key: str, unquote: bool = True) -&gt; Optional[str]</span>:
+            <span class="name">get_parameter</span><span class="signature">(self, key: str) -&gt; Union[str, NoneType, List[Union[str, NoneType]]]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Given a path parameter key, return the parameter value.&quot;&quot;&quot;</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">value</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterValue</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Given a path parameter key, return a copy of the parameter value.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Given a path parameter key, return the parameter value.</p>
+            <div class="docstring"><p>Given a path parameter key, return a copy of the parameter value.</p>
 </div>
 
 
@@ -2031,18 +2079,22 @@ but does not accept the URL string.</p>
 
         
             <span class="def">def</span>
-            <span class="name">set_parameter</span><span class="signature">(self, key: str, value: Optional[str]) -&gt; <a href="#URL">imurl.url.URL</a></span>:
+            <span class="name">set_parameter</span><span class="signature">(
+    self,
+    key: str,
+    value: Union[str, NoneType, List[Union[str, NoneType]]]
+) -&gt; <a href="#URL">imurl.url.URL</a></span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">set_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">set_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ParameterValue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a path parameter key and a value to add/replace, return a new `URL`</span>
 <span class="sd">        with that parameter set.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
+        <span class="n">new_params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">param_dict</span><span class="o">=</span><span class="n">new_params</span><span class="p">)</span>
 </pre></div>
@@ -2070,7 +2122,7 @@ with that parameter set.</p>
 <span class="sd">        Given a path parameter key, return a new `URL` without that parameter.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_params</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
+        <span class="n">new_params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_param_dict</span><span class="p">)</span>
         <span class="k">del</span> <span class="n">new_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">param_dict</span><span class="o">=</span><span class="n">new_params</span><span class="p">)</span>
 </pre></div>
@@ -2109,22 +2161,19 @@ with that parameter set.</p>
 
         
             <span class="def">def</span>
-            <span class="name">get_query</span><span class="signature">(self, key: str, unquote: bool = True) -&gt; Optional[str]</span>:
+            <span class="name">get_query</span><span class="signature">(self, key: str) -&gt; Union[str, NoneType, List[Union[str, NoneType]]]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unquote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Given a query parameter key, return the query value.&quot;&quot;&quot;</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">unquote</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">value</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterValue</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Given a query parameter key, return a copy of the query value.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Given a query parameter key, return the query value.</p>
+            <div class="docstring"><p>Given a query parameter key, return a copy of the query value.</p>
 </div>
 
 
@@ -2134,7 +2183,7 @@ with that parameter set.</p>
 
         
             <span class="def">def</span>
-            <span class="name">set_query</span><span class="signature">(self, key: str, value: Optional[str]) -&gt; <a href="#URL">imurl.url.URL</a></span>:
+            <span class="name">set_query</span><span class="signature">(self, key: str, value: Union[str, NoneType]) -&gt; <a href="#URL">imurl.url.URL</a></span>:
     </div>
 
                 <details>
@@ -2145,7 +2194,7 @@ with that parameter set.</p>
 <span class="sd">        with that query parameter set.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_query</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
+        <span class="n">new_query</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
         <span class="n">new_query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">query_dict</span><span class="o">=</span><span class="n">new_query</span><span class="p">)</span>
 </pre></div>
@@ -2170,7 +2219,7 @@ with that query parameter set.</p>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">delete_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;URL&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Given a query parameter key, return a new `URL` without that query.&quot;&quot;&quot;</span>
-        <span class="n">new_query</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
+        <span class="n">new_query</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_dict</span><span class="p">)</span>
         <span class="k">del</span> <span class="n">new_query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">query_dict</span><span class="o">=</span><span class="n">new_query</span><span class="p">)</span>
 </pre></div>
@@ -2229,7 +2278,7 @@ with that query parameter set.</p>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;query_dict&quot;</span><span class="p">,</span> <span class="s2">&quot;param_dict&quot;</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
-                <span class="n">dictionary</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># type: ignore</span>
+                <span class="n">dictionary</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
         <span class="k">return</span> <span class="n">dictionary</span>
 </pre></div>
@@ -2282,6 +2331,8 @@ with that query parameter set.</p>
         <span class="c1">#  - If there&#39;s a slash in a host, it&#39;s actually a combined host and</span>
         <span class="c1">#    path.</span>
         <span class="n">path</span><span class="p">,</span> <span class="n">host</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">path</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">hostname</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># Need examples for these - I triggered it manually before but can&#39;t</span>
+        <span class="c1"># find the URL I used.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">scheme</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
                 <span class="n">path</span><span class="p">,</span> <span class="n">host</span> <span class="o">=</span> <span class="n">host</span><span class="p">,</span> <span class="n">path</span>
@@ -2296,7 +2347,9 @@ with that query parameter set.</p>
             <span class="n">port</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">params</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="n">message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">message</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Port could not be cast to integer value&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">message</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span>
+                <span class="s2">&quot;Port could not be cast to integer&quot;</span>
+            <span class="p">):</span>  <span class="c1"># pragma: no cover</span>
                 <span class="k">raise</span>
 
             <span class="n">unparsed_port_string</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
@@ -2310,31 +2363,11 @@ with that query parameter set.</p>
 
         <span class="c1"># Capture URL query parameters as dict: &#39;;key=value&#39; -&gt; {&#39;key&#39;: &#39;value&#39;}.</span>
         <span class="c1"># Keys without values are stored with &#39;None&#39; as the value.</span>
-        <span class="n">query</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">query</span><span class="p">:</span>
-            <span class="n">query_string</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;?&quot;</span><span class="p">)</span>
+        <span class="n">param_string</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="n">param_delimiter</span><span class="p">)</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_k_v_string</span><span class="p">(</span><span class="n">param_string</span><span class="p">,</span> <span class="n">param_delimiter</span><span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">query_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">query_delimiter</span><span class="p">):</span>
-                <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
-                <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> <span class="kc">None</span>
-                <span class="n">query</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-
-        <span class="c1"># And the same with path parameters.</span>
-        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
-            <span class="n">param_string</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="n">param_delimiter</span><span class="p">)</span>
-
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">param_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">param_delimiter</span><span class="p">):</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> <span class="kc">None</span>
-                <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">query_string</span> <span class="o">=</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;?&quot;</span><span class="p">)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_k_v_string</span><span class="p">(</span><span class="n">query_string</span><span class="p">,</span> <span class="n">query_delimiter</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">scheme</span><span class="o">=</span><span class="n">parsed_url</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
@@ -2370,7 +2403,7 @@ sets of URL components can result in the same string.</p>
 
         
         <span class="def">class</span>
-        <span class="name">URLDict</span><wbr>(<span class="base">typing.TypedDict</span>):
+        <span class="name">URLDict</span><wbr>(<span class="base">builtins.dict</span>):
     </div>
 
                 <details>
@@ -2400,7 +2433,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.scheme" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.scheme">#&nbsp;&nbsp</a>
 
-        <span class="name">scheme</span><span class="annotation">: Optional[str]</span>
+        <span class="name">scheme</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
     
@@ -2409,7 +2442,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.username" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.username">#&nbsp;&nbsp</a>
 
-        <span class="name">username</span><span class="annotation">: Optional[str]</span>
+        <span class="name">username</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
     
@@ -2418,7 +2451,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.password" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.password">#&nbsp;&nbsp</a>
 
-        <span class="name">password</span><span class="annotation">: Optional[str]</span>
+        <span class="name">password</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
     
@@ -2427,7 +2460,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.host" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.host">#&nbsp;&nbsp</a>
 
-        <span class="name">host</span><span class="annotation">: Optional[str]</span>
+        <span class="name">host</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
     
@@ -2436,7 +2469,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.port" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.port">#&nbsp;&nbsp</a>
 
-        <span class="name">port</span><span class="annotation">: Optional[int]</span>
+        <span class="name">port</span><span class="annotation">: Union[int, NoneType]</span>
     </div>
 
     
@@ -2454,7 +2487,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.param_dict" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.param_dict">#&nbsp;&nbsp</a>
 
-        <span class="name">param_dict</span><span class="annotation">: MutableMapping[str, Optional[str]]</span>
+        <span class="name">param_dict</span><span class="annotation">: MutableMapping[str, Union[str, NoneType, List[Union[str, NoneType]]]]</span>
     </div>
 
     
@@ -2472,7 +2505,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.query_dict" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.query_dict">#&nbsp;&nbsp</a>
 
-        <span class="name">query_dict</span><span class="annotation">: MutableMapping[str, Optional[str]]</span>
+        <span class="name">query_dict</span><span class="annotation">: MutableMapping[str, Union[str, NoneType, List[Union[str, NoneType]]]]</span>
     </div>
 
     
@@ -2490,7 +2523,7 @@ sets of URL components can result in the same string.</p>
                             <div id="URLDict.fragment" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#URLDict.fragment">#&nbsp;&nbsp</a>
 
-        <span class="name">fragment</span><span class="annotation">: Optional[str]</span>
+        <span class="name">fragment</span><span class="annotation">: Union[str, NoneType]</span>
     </div>
 
     
@@ -2500,7 +2533,7 @@ sets of URL components can result in the same string.</p>
                                 <h5>Inherited Members</h5>
                                 <dl>
                                     <div><dt>builtins.dict</dt>
-                                <dd id="URLDict.__init__" class="class">dict</dd>
+                                <dd id="URLDict.__init__" class="function">dict</dd>
                 <dd id="URLDict.get" class="function">get</dd>
                 <dd id="URLDict.setdefault" class="function">setdefault</dd>
                 <dd id="URLDict.pop" class="function">pop</dd>
