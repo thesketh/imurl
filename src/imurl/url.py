@@ -219,6 +219,17 @@ class URL:
     imurl.URL('https://example.com/?key')
     ```
 
+    Repeated query/path parameters can also be specified. These work with `None`
+    values the same way that single values do.
+
+    ```python
+    >>> u = URL("https://example.com/?query=a&query=list&query=of&query=params")
+    >>> u.get_query("query")
+    ['a', 'list', 'of', 'params']
+    >>> u.query_dict
+    {"query": ['a', 'list', 'of', 'params']}
+    ```
+
     Since these components are quite 'special', there are some extra methods to
     work with them.
 

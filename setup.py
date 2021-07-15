@@ -1,17 +1,7 @@
-
 import setuptools
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
-
-dev_dependencies = [
-    "pytest",
-    "black",
-    "pylint",
-    "moto",
-    "pdoc"
-]
-
 
 setuptools.setup(
     name="imurl",
@@ -32,10 +22,9 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Topic :: Software Development :: Libraries",
-        "Typing :: Typed"
+        "Typing :: Typed",
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.8",
-    extras_require={"dev": dev_dependencies}
 )
