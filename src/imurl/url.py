@@ -436,7 +436,7 @@ class URL:
             components.append(netloc)
 
         if self.path:
-            components.append(urllib.parse.quote(self.path))
+            components.append(urllib.parse.quote(self.path, safe=":/"))
 
         parameters = self.parameters
         if parameters:
