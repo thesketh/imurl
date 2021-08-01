@@ -48,6 +48,27 @@ imurl.URL('https://google.com/search?q=a+search+term')
 imurl.URL('https://google.com/search')
 ```
 
+## How does `imurl` differ from the alternatives?
+
+`imurl` aims to be a clean, pythonic API around URL manipulation. It should be easier
+than using `urllib.parse.urlparse`, and just as flexible as anything you'd roll yourself.
+
+`imurl` is written with modern Python, with all the advantages that brings: static analysis
+tools (`mypy`, `pylint`) are used to increase code quality, and the project's style is very consistent
+(`black`). These tools should help to reduce bugs once `imurl` is out of the alpha stage.
+
+Alternatives:
+ - [`urllib.parse.urlparse`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlparse)
+   is the standard library approach to URL parsing. Flexible, but manual. There's very little in the
+   way of convenience.
+ - [`furl`](https://github.com/gruns/furl)
+   is a mutable URL parsing library. Furl is flexible and easily understood, but unfortunately mutable.
+ - [`purl`](https://github.com/codeinthehole/purl)
+   is the original immutable URL parsing library for Python. `purl` did a lot to inspire `imurl`:
+   URLs are immutable, the jQuery-like approach (though nonstandard) feels intuitive, and it's
+   relatively stable. `purl` doesn't handle file-like URLs particularly well (those without a host)
+   and unfortunately is not currently typed. `purl` is recommended whilst imurl is in alpha. 
+
 ## Installation
 
 `imurl` can be installed with `pip`, and has been tested on Python 3.8. `imurl` is still

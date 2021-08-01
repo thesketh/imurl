@@ -2,9 +2,11 @@
 import json
 import urllib.parse
 from copy import deepcopy
+from functools import partial
 from pathlib import PurePosixPath
 from typing import (
     Any,
+    Callable,
     Iterable,
     Iterator,
     MutableMapping,
@@ -45,6 +47,38 @@ _DEFAULT_GET = object()
 """A placeholder value to enable 'None' to be passed as a default value."""
 
 
+def _transform_param_dict(param_dict: Parameters, action: str) -> Parameters:
+    """Quote or unquote a parameter dict."""
+    func: Callable[[str], str]
+
+    if action == "quote":
+        func = partial(urllib.parse.quote, safe="")
+    elif action == "unquote":
+        func = urllib.parse.unquote
+    else:
+        raise ValueError("Action must be one of {'quote', 'unquote'}.")
+
+    new_dict: Parameters = {}
+
+    for key, value in param_dict.items():
+        key = func(key)
+
+        if isinstance(value, list):
+            new_values: List[Optional[str]] = []
+            for sub_value in value:
+                if sub_value is not None:
+                    sub_value = func(sub_value)
+                new_values.append(sub_value)
+
+            value = new_values
+        elif isinstance(value, str):
+            value = func(value)
+
+        new_dict[key] = value
+
+    return new_dict
+
+
 def _encode_url_dict(url_dict: URLDict) -> URLDict:  # pylint: disable=too-many-branches
     """Apply URL percent-endoding to a `URLDict`."""
     quoted_dict = URLDict()
@@ -56,9 +90,9 @@ def _encode_url_dict(url_dict: URLDict) -> URLDict:  # pylint: disable=too-many-
 
     # Keys which _do_ require quoting.
     for k in {"scheme", "username", "password", "host", "fragment"} & keys:
-        value = url_dict[k]
+        value = url_dict[k]  # type: ignore
         if value is None:
-            quoted_dict[k] = None
+            quoted_dict[k] = None  # type: ignore
         else:
             quoted_dict[k] = urllib.parse.quote(value, safe="")  # type: ignore
 
@@ -75,34 +109,17 @@ def _encode_url_dict(url_dict: URLDict) -> URLDict:  # pylint: disable=too-many-
                 next(part_iterator)
 
             for segment in part_iterator:
-                # Assume ":" is not safe in PurePosixPath, sep must be "/"
+                # Assume no safe characters, the path already takes "/" into account.
                 parts.append(urllib.parse.quote(segment, safe=""))
 
             quoted_dict["path"] = path.anchor + "/".join(parts)
         else:
+            # Assume ':' or '/' could be path separator.
             quoted_dict["path"] = urllib.parse.quote(path, safe=":/")
 
     # Keys which need all the items in a dict to be quoted.
     for k in {"query_dict", "param_dict"} & keys:
-        old_dict, new_dict = url_dict[k], {}  # type: ignore
-
-        for key, value in old_dict.items():
-            key = urllib.parse.quote(key, safe="")
-
-            if isinstance(value, list):
-                new_values: List[Optional[str]] = []
-                for sub_value in value:
-                    if sub_value is not None:
-                        sub_value = urllib.parse.quote(sub_value, safe="")
-                    new_values.append(sub_value)
-
-                value = new_values
-            elif isinstance(value, str):
-                value = urllib.parse.quote(value, safe="")
-
-            new_dict[key] = value
-
-        quoted_dict[k] = new_dict  # type: ignore
+        quoted_dict[k] = _transform_param_dict(url_dict[k], action="quote")  # type: ignore
 
     return quoted_dict
 
@@ -259,12 +276,13 @@ class URL:
     ```
 
     Since these components are quite 'special', there are some extra methods to
-    work with them.
+    work with them. At present, all of these methods operate on **quoted** key/value
+    pairs.
 
     The following properties are available:
 
      - `query` / `parameters`: encoded strings of the components.
-     - `query_dict` / `param_dict`: copies of the dictionaries.
+     - `query_dict` / `param_dict`: copies of the encoded dictionaries.
 
     And the following methods are available:
 
@@ -315,11 +333,12 @@ class URL:
         self.query_delimiter = query_delimiter
         """The delimiter for the path parameters. Usually '&'."""
 
-        # Undo percent encoding.
+        # Apply percent encoding, if necessary.
         if not components_encoded:
             quoted_url = self.from_dict(_encode_url_dict(self.to_dict()))
 
             self.__dict__ = quoted_url.__dict__
+            # Make the object mutable again.
             object.__setattr__(self, "_frozen", False)
 
         if url:
@@ -338,8 +357,10 @@ class URL:
             url = url.replace(**dict_from_kwargs, components_encoded=True)  # type: ignore
 
             self.__dict__ = url.__dict__
+            # Make the object mutable again.
             object.__setattr__(self, "_frozen", False)
 
+        # Make the object immutable.
         self._frozen = True
 
     @property
@@ -451,9 +472,9 @@ class URL:
         This is returned in a URL encoded form.
 
         """
-        if self.host is None:
+        if self._host is None:
             return None
-        if not self.host:
+        if not self._host:
             return ""
 
         components = []
@@ -726,7 +747,7 @@ class URL:
 
     @staticmethod
     def _build_k_v_string(dictionary: Parameters, delimiter: str) -> str:
-        """Build a string from an unencoded parameter dict and a delimiter."""
+        """Build a string from an encoded parameter dict and a delimiter."""
         if not dictionary:
             return ""
 
@@ -749,7 +770,7 @@ class URL:
 
     @staticmethod
     def _parse_k_v_string(string: str, delimiter: str) -> Parameters:
-        """Parse a string into an unencoded parameter dict, given a delimiter."""
+        """Parse a string into an encoded parameter dict, given a delimiter."""
         dictionary: Parameters = {}
 
         for item in string.split(delimiter):
@@ -758,11 +779,8 @@ class URL:
 
             try:
                 key, value = item.split("=")
-                value = urllib.parse.unquote(value)
             except ValueError:
                 key, value = item, None
-
-            key = urllib.parse.unquote(key)
 
             if key not in dictionary:
                 dictionary[key] = value

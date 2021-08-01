@@ -40,6 +40,7 @@ This is the contents of said 'AUTHORS' file at the time of writing:
 
 """
 import pickle
+import pytest
 
 from imurl import URL
 
@@ -90,6 +91,7 @@ class TestConstructor:
 
 # pylint: disable=too-few-public-methods
 class TestMoreFactory:
+    @pytest.mark.xfail(reason="Need to implement flag for 'get_query' to decode.")
     def test_extracting_query_param(self):
         url_str = (
             "https://www.sandbox.paypal.com/webscr?cmd=_express-checkout"

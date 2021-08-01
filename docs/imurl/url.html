@@ -192,9 +192,11 @@
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">urllib.parse</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">PurePosixPath</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
     <span class="n">Iterable</span><span class="p">,</span>
     <span class="n">Iterator</span><span class="p">,</span>
     <span class="n">MutableMapping</span><span class="p">,</span>
@@ -235,6 +237,38 @@
 <span class="sd">&quot;&quot;&quot;A placeholder value to enable &#39;None&#39; to be passed as a default value.&quot;&quot;&quot;</span>
 
 
+<span class="k">def</span> <span class="nf">_transform_param_dict</span><span class="p">(</span><span class="n">param_dict</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Quote or unquote a parameter dict.&quot;&quot;&quot;</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;quote&quot;</span><span class="p">:</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;unquote&quot;</span><span class="p">:</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Action must be one of {&#39;quote&#39;, &#39;unquote&#39;}.&quot;</span><span class="p">)</span>
+
+    <span class="n">new_dict</span><span class="p">:</span> <span class="n">Parameters</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">new_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">sub_value</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">sub_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">sub_value</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">sub_value</span><span class="p">)</span>
+                <span class="n">new_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sub_value</span><span class="p">)</span>
+
+            <span class="n">value</span> <span class="o">=</span> <span class="n">new_values</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">new_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">new_dict</span>
+
+
 <span class="k">def</span> <span class="nf">_encode_url_dict</span><span class="p">(</span><span class="n">url_dict</span><span class="p">:</span> <span class="n">URLDict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">URLDict</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-many-branches</span>
     <span class="sd">&quot;&quot;&quot;Apply URL percent-endoding to a `URLDict`.&quot;&quot;&quot;</span>
     <span class="n">quoted_dict</span> <span class="o">=</span> <span class="n">URLDict</span><span class="p">()</span>
@@ -246,9 +280,9 @@
 
     <span class="c1"># Keys which _do_ require quoting.</span>
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;scheme&quot;</span><span class="p">,</span> <span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="s2">&quot;host&quot;</span><span class="p">,</span> <span class="s2">&quot;fragment&quot;</span><span class="p">}</span> <span class="o">&amp;</span> <span class="n">keys</span><span class="p">:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="n">url_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">url_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
         <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">quoted_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">quoted_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">quoted_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
@@ -265,34 +299,17 @@
                 <span class="nb">next</span><span class="p">(</span><span class="n">part_iterator</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">part_iterator</span><span class="p">:</span>
-                <span class="c1"># Assume &quot;:&quot; is not safe in PurePosixPath, sep must be &quot;/&quot;</span>
+                <span class="c1"># Assume no safe characters, the path already takes &quot;/&quot; into account.</span>
                 <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
 
             <span class="n">quoted_dict</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">anchor</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Assume &#39;:&#39; or &#39;/&#39; could be path separator.</span>
             <span class="n">quoted_dict</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s2">&quot;:/&quot;</span><span class="p">)</span>
 
     <span class="c1"># Keys which need all the items in a dict to be quoted.</span>
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;query_dict&quot;</span><span class="p">,</span> <span class="s2">&quot;param_dict&quot;</span><span class="p">}</span> <span class="o">&amp;</span> <span class="n">keys</span><span class="p">:</span>
-        <span class="n">old_dict</span><span class="p">,</span> <span class="n">new_dict</span> <span class="o">=</span> <span class="n">url_dict</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="p">{}</span>  <span class="c1"># type: ignore</span>
-
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">old_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">new_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">sub_value</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">sub_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">sub_value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">sub_value</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-                    <span class="n">new_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sub_value</span><span class="p">)</span>
-
-                <span class="n">value</span> <span class="o">=</span> <span class="n">new_values</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-
-            <span class="n">new_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-
-        <span class="n">quoted_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_dict</span>  <span class="c1"># type: ignore</span>
+        <span class="n">quoted_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">_transform_param_dict</span><span class="p">(</span><span class="n">url_dict</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;quote&quot;</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
     <span class="k">return</span> <span class="n">quoted_dict</span>
 
@@ -449,12 +466,13 @@
 <span class="sd">    ```</span>
 
 <span class="sd">    Since these components are quite &#39;special&#39;, there are some extra methods to</span>
-<span class="sd">    work with them.</span>
+<span class="sd">    work with them. At present, all of these methods operate on **quoted** key/value</span>
+<span class="sd">    pairs.</span>
 
 <span class="sd">    The following properties are available:</span>
 
 <span class="sd">     - `query` / `parameters`: encoded strings of the components.</span>
-<span class="sd">     - `query_dict` / `param_dict`: copies of the dictionaries.</span>
+<span class="sd">     - `query_dict` / `param_dict`: copies of the encoded dictionaries.</span>
 
 <span class="sd">    And the following methods are available:</span>
 
@@ -505,11 +523,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">query_delimiter</span> <span class="o">=</span> <span class="n">query_delimiter</span>
         <span class="sd">&quot;&quot;&quot;The delimiter for the path parameters. Usually &#39;&amp;&#39;.&quot;&quot;&quot;</span>
 
-        <span class="c1"># Undo percent encoding.</span>
+        <span class="c1"># Apply percent encoding, if necessary.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">components_encoded</span><span class="p">:</span>
             <span class="n">quoted_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">_encode_url_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()))</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">quoted_url</span><span class="o">.</span><span class="vm">__dict__</span>
+            <span class="c1"># Make the object mutable again.</span>
             <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_frozen&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">url</span><span class="p">:</span>
@@ -528,8 +547,10 @@
             <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="o">**</span><span class="n">dict_from_kwargs</span><span class="p">,</span> <span class="n">components_encoded</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="vm">__dict__</span>
+            <span class="c1"># Make the object mutable again.</span>
             <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_frozen&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
+        <span class="c1"># Make the object immutable.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="nd">@property</span>
@@ -641,9 +662,9 @@
 <span class="sd">        This is returned in a URL encoded form.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_host</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_host</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
         <span class="n">components</span> <span class="o">=</span> <span class="p">[]</span>
@@ -916,7 +937,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_build_k_v_string</span><span class="p">(</span><span class="n">dictionary</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Build a string from an unencoded parameter dict and a delimiter.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Build a string from an encoded parameter dict and a delimiter.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">dictionary</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
@@ -939,7 +960,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_parse_k_v_string</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Parse a string into an unencoded parameter dict, given a delimiter.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Parse a string into an encoded parameter dict, given a delimiter.&quot;&quot;&quot;</span>
         <span class="n">dictionary</span><span class="p">:</span> <span class="n">Parameters</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">):</span>
@@ -948,11 +969,8 @@
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> <span class="kc">None</span>
-
-            <span class="n">key</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span>
                 <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -1164,12 +1182,13 @@
 <span class="sd">    ```</span>
 
 <span class="sd">    Since these components are quite &#39;special&#39;, there are some extra methods to</span>
-<span class="sd">    work with them.</span>
+<span class="sd">    work with them. At present, all of these methods operate on **quoted** key/value</span>
+<span class="sd">    pairs.</span>
 
 <span class="sd">    The following properties are available:</span>
 
 <span class="sd">     - `query` / `parameters`: encoded strings of the components.</span>
-<span class="sd">     - `query_dict` / `param_dict`: copies of the dictionaries.</span>
+<span class="sd">     - `query_dict` / `param_dict`: copies of the encoded dictionaries.</span>
 
 <span class="sd">    And the following methods are available:</span>
 
@@ -1220,11 +1239,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">query_delimiter</span> <span class="o">=</span> <span class="n">query_delimiter</span>
         <span class="sd">&quot;&quot;&quot;The delimiter for the path parameters. Usually &#39;&amp;&#39;.&quot;&quot;&quot;</span>
 
-        <span class="c1"># Undo percent encoding.</span>
+        <span class="c1"># Apply percent encoding, if necessary.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">components_encoded</span><span class="p">:</span>
             <span class="n">quoted_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">_encode_url_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()))</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">quoted_url</span><span class="o">.</span><span class="vm">__dict__</span>
+            <span class="c1"># Make the object mutable again.</span>
             <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_frozen&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">url</span><span class="p">:</span>
@@ -1243,8 +1263,10 @@
             <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="o">**</span><span class="n">dict_from_kwargs</span><span class="p">,</span> <span class="n">components_encoded</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="vm">__dict__</span>
+            <span class="c1"># Make the object mutable again.</span>
             <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_frozen&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
+        <span class="c1"># Make the object immutable.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="nd">@property</span>
@@ -1356,9 +1378,9 @@
 <span class="sd">        This is returned in a URL encoded form.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_host</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_host</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
         <span class="n">components</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1631,7 +1653,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_build_k_v_string</span><span class="p">(</span><span class="n">dictionary</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Build a string from an unencoded parameter dict and a delimiter.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Build a string from an encoded parameter dict and a delimiter.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">dictionary</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
@@ -1654,7 +1676,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_parse_k_v_string</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Parse a string into an unencoded parameter dict, given a delimiter.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Parse a string into an encoded parameter dict, given a delimiter.&quot;&quot;&quot;</span>
         <span class="n">dictionary</span><span class="p">:</span> <span class="n">Parameters</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">):</span>
@@ -1663,11 +1685,8 @@
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> <span class="kc">None</span>
-
-            <span class="n">key</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span>
                 <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -1857,13 +1876,14 @@ values the same way that single values do.</p>
 </code></pre></div>
 
 <p>Since these components are quite 'special', there are some extra methods to
-work with them.</p>
+work with them. At present, all of these methods operate on <strong>quoted</strong> key/value
+pairs.</p>
 
 <p>The following properties are available:</p>
 
 <ul>
 <li><code><a href="#URL.query">query</a></code> / <code><a href="#URL.parameters">parameters</a></code>: encoded strings of the components.</li>
-<li><code><a href="#URL.query_dict">query_dict</a></code> / <code><a href="#URL.param_dict">param_dict</a></code>: copies of the dictionaries.</li>
+<li><code><a href="#URL.query_dict">query_dict</a></code> / <code><a href="#URL.param_dict">param_dict</a></code>: copies of the encoded dictionaries.</li>
 </ul>
 
 <p>And the following methods are available:</p>
@@ -1940,11 +1960,12 @@ URL.</li>
         <span class="bp">self</span><span class="o">.</span><span class="n">query_delimiter</span> <span class="o">=</span> <span class="n">query_delimiter</span>
         <span class="sd">&quot;&quot;&quot;The delimiter for the path parameters. Usually &#39;&amp;&#39;.&quot;&quot;&quot;</span>
 
-        <span class="c1"># Undo percent encoding.</span>
+        <span class="c1"># Apply percent encoding, if necessary.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">components_encoded</span><span class="p">:</span>
             <span class="n">quoted_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">_encode_url_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()))</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">quoted_url</span><span class="o">.</span><span class="vm">__dict__</span>
+            <span class="c1"># Make the object mutable again.</span>
             <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_frozen&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">url</span><span class="p">:</span>
@@ -1963,8 +1984,10 @@ URL.</li>
             <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="o">**</span><span class="n">dict_from_kwargs</span><span class="p">,</span> <span class="n">components_encoded</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="vm">__dict__</span>
+            <span class="c1"># Make the object mutable again.</span>
             <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_frozen&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
+        <span class="c1"># Make the object immutable.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_frozen</span> <span class="o">=</span> <span class="kc">True</span>
 </pre></div>
 
