@@ -39,38 +39,66 @@ class URLDict(TypedDict, total=False):
 
 
 URL_COMPONENTS = set(URLDict.__annotations__.keys())  # pylint: disable=no-member
+"""The keys of a URLDict."""
+
+_DEFAULT_GET = object()
+"""A placeholder value to enable 'None' to be passed as a default value."""
 
 
-def _unencode_url_dict(url_dict: URLDict) -> URLDict:
-    """Undo URL percent-endoding to a `URLDict`."""
+def _encode_url_dict(url_dict: URLDict) -> URLDict:  # pylint: disable=too-many-branches
+    """Apply URL percent-endoding to a `URLDict`."""
     quoted_dict = URLDict()
-    keys = set(url_dict.keys())
+    keys = url_dict.keys()
 
     # Keys which don't require quoting.
     for k in {"port", "param_delimiter", "query_delimiter"} & keys:
         quoted_dict[k] = url_dict[k]  # type: ignore
 
     # Keys which _do_ require quoting.
-    for k in {"scheme", "username", "password", "host", "path", "fragment"} & keys:
-        quoted_dict[k] = urllib.parse.unquote(url_dict[k])  # type: ignore
+    for k in {"scheme", "username", "password", "host", "fragment"} & keys:
+        value = url_dict[k]
+        if value is None:
+            quoted_dict[k] = None
+        else:
+            quoted_dict[k] = urllib.parse.quote(value, safe="")  # type: ignore
+
+    # Path, which needs extra safe characters.
+    if "path" in url_dict:
+        path = url_dict["path"]
+
+        if path is None:
+            quoted_dict["path"] = None
+        elif isinstance(path, PurePosixPath):
+            parts, part_iterator = [], iter(path.parts)
+            # Skip the anchor, we'll add this back later.
+            if path.anchor:
+                next(part_iterator)
+
+            for segment in part_iterator:
+                # Assume ":" is not safe in PurePosixPath, sep must be "/"
+                parts.append(urllib.parse.quote(segment, safe=""))
+
+            quoted_dict["path"] = path.anchor + "/".join(parts)
+        else:
+            quoted_dict["path"] = urllib.parse.quote(path, safe=":/")
 
     # Keys which need all the items in a dict to be quoted.
     for k in {"query_dict", "param_dict"} & keys:
         old_dict, new_dict = url_dict[k], {}  # type: ignore
 
         for key, value in old_dict.items():
-            key = urllib.parse.unquote(key)
+            key = urllib.parse.quote(key, safe="")
 
             if isinstance(value, list):
                 new_values: List[Optional[str]] = []
                 for sub_value in value:
                     if sub_value is not None:
-                        sub_value = urllib.parse.unquote(sub_value)
+                        sub_value = urllib.parse.quote(sub_value, safe="")
                     new_values.append(sub_value)
 
                 value = new_values
             elif isinstance(value, str):
-                value = urllib.parse.unquote(value)
+                value = urllib.parse.quote(value, safe="")
 
             new_dict[key] = value
 
@@ -79,7 +107,7 @@ def _unencode_url_dict(url_dict: URLDict) -> URLDict:
     return quoted_dict
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-public-methods,too-many-instance-attributes
 class URL:
     """
     A simple, immutable URL class.
@@ -150,8 +178,8 @@ class URL:
         https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote).
     URLs are always assumed to be pre-encoded.
 
-    Data is stored in the class in its unencoded form, and encoded only when
-    composite components are encoded (e.g. `userinfo`, `netloc`, `url`)
+    Data is stored in the class in its encoded form, and unencoded only when
+    non-composite properties are accessed (e.g. `path`, `fragment`, `url`)
 
     ```python
     >>> u = URL("https://example.com)
@@ -267,34 +295,29 @@ class URL:
         fragment: Optional[str] = None,
         components_encoded: bool = False,
     ):
-        self.scheme = scheme
-        """The 'scheme' component of the URL (e.g. 'http')."""
-        self.username = username
-        """The 'username' component of the URL."""
-        self.password = password
-        """The 'password' component of the URL."""
-        self.host = host
-        """The 'host' component of the URL (AKA the domain, e.g. 'example.com')."""
-        self.port = port
-        """The port component of the URL (e.g. 8080)."""
+        self._scheme = scheme
+        self._username = username
+        self._password = password
+        self._host = host
+        self._fragment = fragment
+
         if isinstance(path, PurePosixPath):
             path = str(path)
-        self.path = path
-        """The 'path' component of the URL. Usually a POSIX path."""
+        self._path = path
+
         self._param_dict = param_dict or {}
-        """The path parameters from the URL."""
+        self._query_dict = query_dict or {}
+
+        self.port = port
+        """The port component of the URL (e.g. 8080)."""
         self.param_delimiter = param_delimiter
         """The delimiter for the path parameters. Usually ';'."""
-        self._query_dict = query_dict or {}
-        """The query parameters from the URL."""
         self.query_delimiter = query_delimiter
         """The delimiter for the path parameters. Usually '&'."""
-        self.fragment = fragment
-        """The fragment component of the URL (e.g. 'some-html-tag')"""
 
         # Undo percent encoding.
-        if components_encoded:
-            quoted_url = self.from_dict(_unencode_url_dict(self.to_dict()))
+        if not components_encoded:
+            quoted_url = self.from_dict(_encode_url_dict(self.to_dict()))
 
             self.__dict__ = quoted_url.__dict__
             object.__setattr__(self, "_frozen", False)
@@ -312,7 +335,7 @@ class URL:
             # Apply changes from the kwargs to the URL parsed from
             # the URL string.
             dict_from_kwargs = self.to_dict()
-            url = url.replace(**dict_from_kwargs)  # type: ignore
+            url = url.replace(**dict_from_kwargs, components_encoded=True)  # type: ignore
 
             self.__dict__ = url.__dict__
             object.__setattr__(self, "_frozen", False)
@@ -320,17 +343,59 @@ class URL:
         self._frozen = True
 
     @property
+    def scheme(self) -> Optional[str]:
+        """The 'scheme' component of the URL (e.g. 'http')."""
+        if self._scheme is not None:
+            return urllib.parse.unquote(self._scheme)
+        return None
+
+    @property
+    def username(self) -> Optional[str]:
+        """The 'username' component of the URL."""
+        if self._username is not None:
+            return urllib.parse.unquote(self._username)
+        return None
+
+    @property
+    def password(self) -> Optional[str]:
+        """The 'password' component of the URL."""
+        if self._password is not None:
+            return urllib.parse.unquote(self._password)
+        return None
+
+    @property
+    def host(self) -> Optional[str]:
+        """The 'host' component of the URL (AKA the domain, e.g. 'example.com')."""
+        if self._host is not None:
+            return urllib.parse.unquote(self._host)
+        return None
+
+    @property
+    def path(self) -> Optional[str]:
+        """The 'path' component of the URL. Usually a POSIX path."""
+        if self._path is not None:
+            return urllib.parse.unquote(self._path)
+        return None
+
+    @property
+    def fragment(self) -> Optional[str]:
+        """The 'fragment' component of the URL."""
+        if self._fragment is not None:
+            return urllib.parse.unquote(self._fragment)
+        return None
+
+    @property
     def path_as_posix(self) -> Optional[PurePosixPath]:
         """
-        The URL path as a [`pathlib.PurePosixPath`](
-            https://docs.python.org/3/library/pathlib.html#pathlib.PurePosixPath).
-        This can be really useful for transforming the path component of a HTTP url:
+         The URL path as a [`pathlib.PurePosixPath`](
+             https://docs.python.org/3/library/pathlib.html#pathlib.PurePosixPath).
+         This can be really useful for transforming the path component of a HTTP url:
 
         ```python
-        >>> u = URL("https://example.com/some/path")
-        >>> u.replace(path=u.path_as_posix.parent)
-        imurl.URL('https://example.com/some')
-        ```
+         >>> u = URL("https://example.com/some/path")
+         >>> u.replace(path=u.path_as_posix.parent)
+         imurl.URL('https://example.com/some')
+         ```
 
         """
         if not self.path:
@@ -361,14 +426,14 @@ class URL:
         This is returned in a URL encoded form.
 
         """
-        if not self.username:
+        if not self._username:
             return None
 
         components = []
-        components.append(urllib.parse.quote(self.username))
-        if self.password:
+        components.append(self._username)
+        if self._password:
             components.append(":")
-            components.append(urllib.parse.quote(self.password))
+            components.append(self._password)
 
         return "".join(components)
 
@@ -397,7 +462,7 @@ class URL:
             components.append(userinfo)
             components.append("@")
 
-        components.append(urllib.parse.quote(self.host))
+        components.append(self._host)
 
         if isinstance(self.port, int):  # 0 is okay too.
             components.append(":")
@@ -426,8 +491,8 @@ class URL:
         """
         components = []
 
-        if self.scheme:
-            components.append(urllib.parse.quote(self.scheme))
+        if self._scheme:
+            components.append(self._scheme)
             components.append(":")
 
         netloc = self.netloc
@@ -435,8 +500,8 @@ class URL:
             components.append("//")
             components.append(netloc)
 
-        if self.path:
-            components.append(urllib.parse.quote(self.path, safe=":/"))
+        if self._path:
+            components.append(self._path)
 
         parameters = self.parameters
         if parameters:
@@ -448,9 +513,9 @@ class URL:
             components.append("?")
             components.append(query)
 
-        if self.fragment:
+        if self._fragment:
             components.append("#")
-            components.append(self.fragment)
+            components.append(self._fragment)
         return "".join(components)
 
     def replace(
@@ -467,18 +532,40 @@ class URL:
 
         """
         dictionary = self.to_dict()
-        if components_encoded:
-            url_dict = _unencode_url_dict(url_dict)  # type: ignore
+        if not components_encoded:
+            url_dict = _encode_url_dict(url_dict)  # type: ignore
         dictionary.update(url_dict)  # type: ignore
         return self.from_dict(dictionary)
+
+    def joinpath(
+        self, *args: Union[str, PurePosixPath], components_encoded: bool = False
+    ):
+        """Join components to the path (a la `pathlib`)."""
+        if self.path_as_posix is None:
+            path = PurePosixPath(*args)
+        else:
+            path = self.path_as_posix.joinpath(*args)
+
+        return self.replace(path=path, components_encoded=components_encoded)
 
     def has_parameter(self, key: str) -> bool:
         """Return whether a given key is a URL path parameter."""
         return key in self._param_dict
 
-    def get_parameter(self, key: str) -> ParameterValue:
-        """Given a path parameter key, return a copy of the parameter value."""
-        return deepcopy(self._param_dict[key])
+    def get_parameter(self, key: str, default: Any = _DEFAULT_GET) -> ParameterValue:
+        """
+        Given a path parameter key, return a copy of the parameter value.
+
+        If the key is not in the parameters, and `default` is not supplied,
+        raise a KeyError. Otherwise, return the default value.
+
+        """
+        try:
+            return deepcopy(self._param_dict[key])
+        except KeyError:
+            if default is _DEFAULT_GET:
+                raise
+            return default
 
     def set_parameter(self, key: str, value: ParameterValue) -> "URL":
         """
@@ -503,9 +590,20 @@ class URL:
         """Return whether a given key is in the URL query parameters."""
         return key in self._query_dict
 
-    def get_query(self, key: str) -> ParameterValue:
-        """Given a query parameter key, return a copy of the query value."""
-        return deepcopy(self._query_dict[key])
+    def get_query(self, key: str, default: Any = _DEFAULT_GET) -> ParameterValue:
+        """
+        Given a query parameter key, return a copy of the query value.
+
+        If the key is not in the query parameters, and `default` is not supplied,
+        raise a KeyError. Otherwise, return the default value.
+
+        """
+        try:
+            return deepcopy(self._query_dict[key])
+        except KeyError:
+            if default is _DEFAULT_GET:
+                raise
+            return default
 
     def set_query(self, key: str, value: Optional[str]) -> "URL":
         """
@@ -526,15 +624,21 @@ class URL:
     @classmethod
     def from_dict(cls, dictionary: URLDict) -> "URL":
         """Deserialize the URL from a dict."""
-        return cls(**dictionary, components_encoded=False)
+        return cls(**dictionary, components_encoded=True)
 
     def to_dict(self) -> URLDict:
-        """Serialize the URL to a dict."""
+        """Serialize the URL to a dict. URL components will be encoded."""
         dictionary = URLDict()
 
         fields = URL_COMPONENTS & set(self.__dict__.keys())
+
         for field in fields:
             value = self.__dict__[field]
+            if value is not None:
+                dictionary[field] = value  # type: ignore
+
+        for field in ("scheme", "username", "password", "host", "path"):
+            value = self.__dict__[f"_{field}"]
             if value is not None:
                 dictionary[field] = value  # type: ignore
 
@@ -547,10 +651,7 @@ class URL:
 
     @classmethod
     def from_url_string(
-        cls,
-        url: str,
-        query_delimiter: str = "&",
-        param_delimiter: str = ";",
+        cls, url: str, query_delimiter: str = "&", param_delimiter: str = ";",
     ) -> "URL":
         """
         Create a `URL` class from a URL string. This isn't perfect - two valid
@@ -634,8 +735,6 @@ class URL:
         ) -> Iterator[str]:
             """Loop through key/value pairs and yield formatted strings."""
             for key, value in param_seq:
-                key = urllib.parse.quote(key)
-
                 if value is None:
                     yield key
                 elif isinstance(value, list):
@@ -643,7 +742,6 @@ class URL:
                     for string in iterate_k_v_pairs(iterable):
                         yield string
                 else:
-                    value = urllib.parse.quote(str(value))
                     yield f"{key}={value}"
 
         items = iterate_k_v_pairs(dictionary.items())

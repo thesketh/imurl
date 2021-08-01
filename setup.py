@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="imurl",
-    version="0.1.3",
+    version="0.2.0",
     author="Travis Hesketh",
     author_email="travis@hesketh.scot",
     description="`imurl` is an immutable URL library, written in modern Python.",
